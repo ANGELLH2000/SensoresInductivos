@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador Sensor Inductivo</title>
+<meta name="description" content="Demostración interactiva de cómo un sensor de proximidad inductivo detecta objetos metálicos mediante corrientes de Eddy.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f2ede1;
+    --panel:#ffffff;
+    --ink:#20261e;
+    --ink-soft:#5a6455;
+    --line:#d8d0bd;
+    --accent:#c9812f;
+    --accent-ink:#3a2205;
+    --ok:#4f7a3b;
+    --ok-glow:#8fd66a;
+    --off:#b2a98f;
+    --field:#d99b45;
+    --steel:#8b8f96;
+    --steel-dark:#5b5e63;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#20281d;
+      --panel:#2c3627;
+      --ink:#f0ece0;
+      --ink-soft:#b7bfae;
+      --line:#44503c;
+      --accent:#e0a352;
+      --accent-ink:#2a1a05;
+      --ok:#7fcf5c;
+      --ok-glow:#a8ea82;
+      --off:#5c6653;
+      --field:#e0a352;
+      --steel:#a7abb1;
+      --steel-dark:#6c7076;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#20281d;
+    --panel:#2c3627;
+    --ink:#f0ece0;
+    --ink-soft:#b7bfae;
+    --line:#44503c;
+    --accent:#e0a352;
+    --accent-ink:#2a1a05;
+    --ok:#7fcf5c;
+    --ok-glow:#a8ea82;
+    --off:#5c6653;
+    --field:#e0a352;
+    --steel:#a7abb1;
+    --steel-dark:#6c7076;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;
+    padding:28px 16px 40px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{width:100%;max-width:880px;}
+
+  header{margin-bottom:20px;}
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:600;
+  }
+  h1{
+    font-family:"Archivo Expanded",sans-serif;
+    font-weight:800;
+    font-size:clamp(24px,4.5vw,34px);
+    line-height:1.08;
+    margin:.35em 0 .3em;
+    text-wrap:balance;
+  }
+  p.lead{
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1.55;
+    max-width:60ch;
+    margin:0;
+  }
+
+  .stage{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px 20px 16px;
+    margin-top:22px;
+  }
+
+  canvas{display:block;width:100%;height:auto;border-radius:10px;}
+
+  .controls{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px 18px;
+    align-items:center;
+    margin-top:18px;
+  }
+  .slider-row{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;}
+  .slider-label{
+    display:flex;justify-content:space-between;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .slider-label b{color:var(--ink);font-weight:600;}
+  input[type="range"]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:6px;border-radius:4px;
+    background:linear-gradient(90deg,var(--accent),var(--line));
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--accent);
+    border:3px solid var(--panel);
+    box-shadow:0 0 0 1px var(--line);
+    cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--accent);border:3px solid var(--panel);
+    box-shadow:0 0 0 1px var(--line);cursor:pointer;
+  }
+
+  .row2{
+    grid-column:1/-1;
+    display:flex;flex-wrap:wrap;gap:10px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  select, button{
+    font-family:"IBM Plex Sans",sans-serif;
+    font-size:13.5px;font-weight:600;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    color:var(--ink);
+    padding:9px 12px;
+    cursor:pointer;
+  }
+  button{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--accent);
+    color:var(--accent-ink);
+    border:none;
+  }
+  button:focus-visible, select:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+
+  .readouts{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:18px;
+  }
+  @media (max-width:520px){ .readouts{grid-template-columns:1fr 1fr;} }
+  .tile{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .tile .k{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .tile .v{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:19px;font-weight:600;
+    margin-top:3px;
+    font-variant-numeric:tabular-nums;
+  }
+  .tile.status .v{display:flex;align-items:center;gap:8px;font-size:15px;}
+  .led{
+    width:12px;height:12px;border-radius:50%;
+    background:var(--off);
+    box-shadow:none;
+    transition:background .12s, box-shadow .12s;
+    flex:none;
+  }
+  .led.on{
+    background:var(--ok-glow);
+    box-shadow:0 0 10px 3px var(--ok-glow);
+  }
+
+  .legend{
+    display:flex;flex-wrap:wrap;gap:14px;
+    margin-top:16px;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+
+  footer{
+    margin-top:18px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Sensores y Actuadores &middot; Simulación</div>
+    <h1>Cómo detecta un sensor inductivo</h1>
+    <p class="lead">Acerca el objetivo metálico o pulsa Reproducir para ver el campo electromagnético, las corrientes de Eddy amortiguando la oscilación, y el instante exacto en que conmuta la salida.</p>
+  </header>
+
+  <div class="stage">
+    <canvas id="scene" width="1600" height="720"></canvas>
+
+    <div class="controls">
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>Distancia del objetivo <b id="distReadout">30.0 mm</b></span>
+          <span>Sn (<span id="snReadout">8.0</span> mm) marcado en rojo</span>
+        </div>
+        <input type="range" id="dist" min="0" max="50" step="0.1" value="30">
+      </div>
+
+      <div class="row2">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);">
+          Material del objetivo
+          <select id="material">
+            <option value="1.0" data-label="Acero dulce">Acero dulce (factor 1.0)</option>
+            <option value="0.7" data-label="Acero inoxidable 300">Acero inoxidable 300 (factor 0.7)</option>
+            <option value="0.45" data-label="Bronce">Bronce (factor 0.45)</option>
+            <option value="0.4" data-label="Aluminio">Aluminio (factor 0.4)</option>
+            <option value="0.35" data-label="Cobre">Cobre (factor 0.35)</option>
+          </select>
+        </label>
+        <button id="playBtn" type="button">▶ Reproducir barrido</button>
+      </div>
+    </div>
+
+    <div class="readouts">
+      <div class="tile status">
+        <div class="k">Salida</div>
+        <div class="v"><span class="led" id="led"></span><span id="statusText">Fuera de rango</span></div>
+      </div>
+      <div class="tile">
+        <div class="k">Amplitud oscilación</div>
+        <div class="v" id="ampReadout">100%</div>
+      </div>
+      <div class="tile">
+        <div class="k">Sn efectivo (material)</div>
+        <div class="v" id="snEffReadout">8.0 mm</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--field);"></span>Campo electromagnético</span>
+      <span><span class="swatch" style="background:var(--steel);"></span>Objetivo metálico</span>
+      <span><span class="swatch" style="background:#c0392b;"></span>Distancia nominal Sn</span>
+      <span><span class="swatch" style="background:var(--ok);"></span>Zona de trabajo asegurada (Sa)</span>
+    </div>
+  </div>
+
+  <footer>Sn nominal del sensor de referencia: 8&nbsp;mm. El factor de corrección del material desplaza la distancia de conmutación real, tal como se explica en la sección de material y factores de corrección de la presentación.</footer>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('scene');
+  const ctx = canvas.getContext('2d');
+  const distSlider = document.getElementById('dist');
+  const distReadout = document.getElementById('distReadout');
+  const snReadout = document.getElementById('snReadout');
+  const snEffReadout = document.getElementById('snEffReadout');
+  const ampReadout = document.getElementById('ampReadout');
+  const led = document.getElementById('led');
+  const statusText = document.getElementById('statusText');
+  const materialSel = document.getElementById('material');
+  const playBtn = document.getElementById('playBtn');
+
+  const SN_NOMINAL = 8; // mm, reference switching distance
+  let t = 0;
+  let playing = false;
+  let playDir = -1;
+
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function factor(){ return parseFloat(materialSel.value); }
+  function snEffective(){ return SN_NOMINAL * factor(); }
+
+  function amplitudeFor(distMm){
+    const snEff = snEffective();
+    const k = 0.35;
+    const x = (distMm - snEff) / (snEff * k + 0.6);
+    const sig = 1 / (1 + Math.exp(-x));
+    return 0.12 + 0.88 * sig;
+  }
+
+  function isTriggered(distMm){ return distMm <= snEffective(); }
+
+  let ampHistory = new Array(160).fill(1);
+
+  function draw(){
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    const bg = cssVar('--panel') || '#fff';
+    const ink = cssVar('--ink') || '#222';
+    const inkSoft = cssVar('--ink-soft') || '#777';
+    const line = cssVar('--line') || '#ddd';
+    const field = cssVar('--field') || '#d99b45';
+    const steel = cssVar('--steel') || '#8b8f96';
+    const steelDark = cssVar('--steel-dark') || '#5b5e63';
+    const ok = cssVar('--ok') || '#4f7a3b';
+    const okGlow = cssVar('--ok-glow') || '#8fd66a';
+
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    const axisY = H*0.42;
+    const sensorRight = W*0.20;
+    const pxPerMm = (W*0.70) / 50;
+    const distMm = parseFloat(distSlider.value);
+    const amp = amplitudeFor(distMm);
+    const triggered = isTriggered(distMm);
+
+    const snEff = snEffective();
+    const saMm = snEff * 0.81;
+    ctx.fillStyle = ok; ctx.globalAlpha = 0.13;
+    ctx.fillRect(sensorRight, axisY-120, saMm*pxPerMm, 240);
+    ctx.globalAlpha = 1;
+
+    const snX = sensorRight + snEff*pxPerMm;
+    ctx.strokeStyle = '#c0392b';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([8,6]);
+    ctx.beginPath();
+    ctx.moveTo(snX, axisY-140); ctx.lineTo(snX, axisY+140);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#c0392b';
+    ctx.font = '600 20px "IBM Plex Mono", monospace';
+    ctx.fillText('Sn = ' + snEff.toFixed(1) + ' mm', snX+10, axisY-150);
+
+    ctx.fillStyle = steelDark;
+    ctx.fillRect(sensorRight-140, axisY-90, 140, 180);
+    ctx.fillStyle = steel;
+    ctx.fillRect(sensorRight-140, axisY-90, 18, 180);
+    ctx.fillStyle = ink;
+    ctx.fillRect(sensorRight-8, axisY-90, 8, 180);
+    ctx.font = '700 22px "Archivo Expanded", sans-serif';
+    ctx.fillStyle = ink;
+    ctx.textAlign = 'center';
+    ctx.fillText('SENSOR', sensorRight-70, axisY+130);
+    ctx.textAlign = 'left';
+
+    ctx.strokeStyle = field;
+    ctx.lineWidth = 4;
+    for(let i=0;i<3;i++){
+      ctx.beginPath();
+      ctx.ellipse(sensorRight-95, axisY-30+i*30, 30, 12, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    const nArcs = 5;
+    for(let i=0;i<nArcs;i++){
+      const baseR = 26 + i*30;
+      const wobble = Math.sin(t*4 + i*0.8) * (6*amp);
+      const r = baseR*amp*1.05 + wobble;
+      ctx.beginPath();
+      ctx.strokeStyle = field;
+      ctx.globalAlpha = 0.85 - i*0.13;
+      ctx.lineWidth = 3;
+      ctx.arc(sensorRight, axisY, Math.max(r,4), -Math.PI*0.5, Math.PI*0.5);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.strokeStyle = line;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(sensorRight, axisY+150);
+    ctx.lineTo(sensorRight + 50*pxPerMm + 40, axisY+150);
+    ctx.stroke();
+    ctx.fillStyle = inkSoft;
+    ctx.font = '500 14px "IBM Plex Mono", monospace';
+    for(let m=0; m<=50; m+=10){
+      const x = sensorRight + m*pxPerMm;
+      ctx.beginPath();
+      ctx.moveTo(x, axisY+145); ctx.lineTo(x, axisY+155);
+      ctx.stroke();
+      ctx.fillText(m+'mm', x-12, axisY+175);
+    }
+
+    const targetX = sensorRight + distMm*pxPerMm;
+    ctx.fillStyle = triggered ? okGlow : steel;
+    ctx.fillRect(targetX, axisY-55, 34, 110);
+    ctx.fillStyle = steelDark;
+    ctx.fillRect(targetX, axisY-55, 6, 110);
+    ctx.font = '600 15px "IBM Plex Sans", sans-serif';
+    ctx.fillStyle = ink;
+    ctx.textAlign = 'center';
+    const matLabel = materialSel.selectedOptions[0].dataset.label;
+    ctx.fillText(matLabel, targetX+17, axisY-70);
+    ctx.textAlign = 'left';
+
+    if (amp < 0.9) {
+      const swirlAlpha = 1-amp;
+      ctx.strokeStyle = '#c0392b';
+      ctx.globalAlpha = swirlAlpha*0.9;
+      ctx.lineWidth = 2;
+      for(let i=0;i<2;i++){
+        const cy = axisY - 20 + i*40;
+        ctx.beginPath();
+        ctx.ellipse(targetX-4, cy, 10+4*Math.sin(t*6+i), 16, 0, 0, Math.PI*1.6);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    const scopeTop = H*0.72, scopeH = H*0.20, scopeLeft = W*0.06, scopeW = W*0.88;
+    ctx.fillStyle = bg;
+    ctx.strokeStyle = line;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(scopeLeft, scopeTop, scopeW, scopeH);
+    ctx.fillStyle = inkSoft;
+    ctx.font = '600 12px "IBM Plex Mono", monospace';
+    ctx.fillText('AMPLITUD DE OSCILACIÓN DEL CIRCUITO LC', scopeLeft, scopeTop-10);
+
+    ampHistory.push(amp);
+    ampHistory.shift();
+    ctx.beginPath();
+    ctx.strokeStyle = field;
+    ctx.lineWidth = 2.5;
+    for(let i=0;i<ampHistory.length;i++){
+      const x = scopeLeft + (i/(ampHistory.length-1))*scopeW;
+      const yMid = scopeTop + scopeH/2;
+      const y = yMid - Math.sin(t*20 - i*0.6) * (ampHistory[i]*scopeH*0.42);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#c0392b';
+    ctx.setLineDash([5,5]);
+    ctx.lineWidth = 1.5;
+    const threshY = scopeTop + scopeH*0.82;
+    ctx.beginPath();
+    ctx.moveTo(scopeLeft, threshY); ctx.lineTo(scopeLeft+scopeW, threshY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    distReadout.textContent = distMm.toFixed(1) + ' mm';
+    snReadout.textContent = SN_NOMINAL.toFixed(1);
+    snEffReadout.textContent = snEff.toFixed(1) + ' mm';
+    ampReadout.textContent = Math.round(amp*100) + '%';
+    led.classList.toggle('on', triggered);
+    statusText.textContent = triggered ? 'Detectado — salida activada' : 'Fuera de rango';
+  }
+
+  function loop(){
+    t += 0.016;
+    if (playing){
+      let v = parseFloat(distSlider.value) + playDir*0.35;
+      if (v <= 0){ v = 0; playDir = 1; }
+      if (v >= 50){ v = 50; playDir = -1; }
+      distSlider.value = v.toFixed(1);
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  distSlider.addEventListener('input', draw);
+  materialSel.addEventListener('change', draw);
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? '⏸ Pausar barrido' : '▶ Reproducir barrido';
+  });
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
