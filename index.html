@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Simulador Sensor Inductivo</title>
-<meta name="description" content="Demostración interactiva de cómo un sensor de proximidad inductivo detecta objetos metálicos mediante corrientes de Eddy.">
+<title>Simuladores Sensor Inductivo</title>
+<meta name="description" content="Dos simuladores interactivos en pestañas: detección de un sensor de proximidad inductivo y formación de corrientes de Eddy dentro del metal.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root{
-    color-scheme: light dark;
     --bg:#f2ede1;
     --panel:#ffffff;
     --ink:#20261e;
@@ -20,11 +19,13 @@
     --ok-glow:#8fd66a;
     --off:#b2a98f;
     --field:#d99b45;
+    --eddy:#c0392b;
+    --heat:#e0632f;
     --steel:#8b8f96;
     --steel-dark:#5b5e63;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
+  :root:not([data-theme="light"]){
+    @media (prefers-color-scheme: dark){
       --bg:#20281d;
       --panel:#2c3627;
       --ink:#f0ece0;
@@ -36,6 +37,8 @@
       --ok-glow:#a8ea82;
       --off:#5c6653;
       --field:#e0a352;
+      --eddy:#e2685a;
+      --heat:#ef7f4f;
       --steel:#a7abb1;
       --steel-dark:#6c7076;
     }
@@ -52,13 +55,15 @@
     --ok-glow:#a8ea82;
     --off:#5c6653;
     --field:#e0a352;
+    --eddy:#e2685a;
+    --heat:#ef7f4f;
     --steel:#a7abb1;
     --steel-dark:#6c7076;
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
   body{
+    margin:0;
     background:var(--bg);
     color:var(--ink);
     font-family:"IBM Plex Sans",system-ui,sans-serif;
@@ -66,9 +71,9 @@
     display:flex;
     justify-content:center;
   }
-  .wrap{width:100%;max-width:880px;}
+  .wrap{width:100%;max-width:900px;}
 
-  header{margin-bottom:20px;}
+  header{margin-bottom:16px;}
   .eyebrow{
     font-family:"IBM Plex Mono",monospace;
     font-size:12px;
@@ -89,16 +94,56 @@
     color:var(--ink-soft);
     font-size:15px;
     line-height:1.55;
-    max-width:60ch;
+    max-width:64ch;
     margin:0;
   }
+
+  /* Tabs */
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-top:20px;
+    border-bottom:1px solid var(--line);
+  }
+  .tab-btn{
+    font-family:"IBM Plex Sans",sans-serif;
+    font-weight:600;
+    font-size:14px;
+    background:none;
+    border:none;
+    color:var(--ink-soft);
+    padding:11px 16px;
+    cursor:pointer;
+    border-bottom:2.5px solid transparent;
+    margin-bottom:-1px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .tab-btn .num{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    background:var(--line);
+    color:var(--ink);
+    border-radius:5px;
+    padding:1px 6px;
+  }
+  .tab-btn[aria-selected="true"]{
+    color:var(--ink);
+    border-bottom-color:var(--accent);
+  }
+  .tab-btn[aria-selected="true"] .num{
+    background:var(--accent);
+    color:var(--accent-ink);
+  }
+  .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .panel{margin-top:20px;}
+  .panel[hidden]{display:none;}
 
   .stage{
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:18px;
     padding:20px 20px 16px;
-    margin-top:22px;
   }
 
   canvas{display:block;width:100%;height:auto;border-radius:10px;}
@@ -110,14 +155,16 @@
     align-items:center;
     margin-top:18px;
   }
+  .controls.flow{display:flex;flex-wrap:wrap;}
   .slider-row{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;}
-  .slider-label{
+  .field-group{display:flex;flex-direction:column;gap:6px;flex:1 1 220px;}
+  .slider-label, .field-group .lbl{
     display:flex;justify-content:space-between;
     font-family:"IBM Plex Mono",monospace;
     font-size:12.5px;
     color:var(--ink-soft);
   }
-  .slider-label b{color:var(--ink);font-weight:600;}
+  .slider-label b, .field-group .lbl b{color:var(--ink);font-weight:600;}
   input[type="range"]{
     -webkit-appearance:none;appearance:none;
     width:100%;height:6px;border-radius:4px;
@@ -154,11 +201,16 @@
     padding:9px 12px;
     cursor:pointer;
   }
-  button{
+  button.primary{
     display:inline-flex;align-items:center;gap:7px;
     background:var(--accent);
     color:var(--accent-ink);
     border:none;
+  }
+  button.toggle[aria-pressed="true"]{
+    background:var(--eddy);
+    color:#fff;
+    border-color:transparent;
   }
   button:focus-visible, select:focus-visible, input:focus-visible{
     outline:2px solid var(--accent);outline-offset:2px;
@@ -170,7 +222,7 @@
     gap:10px;
     margin-top:18px;
   }
-  @media (max-width:520px){ .readouts{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .readouts{grid-template-columns:1fr 1fr;} }
   .tile{
     background:var(--bg);
     border:1px solid var(--line);
@@ -179,12 +231,12 @@
   }
   .tile .k{
     font-family:"IBM Plex Mono",monospace;
-    font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
     color:var(--ink-soft);
   }
   .tile .v{
     font-family:"IBM Plex Mono",monospace;
-    font-size:19px;font-weight:600;
+    font-size:18px;font-weight:600;
     margin-top:3px;
     font-variant-numeric:tabular-nums;
   }
@@ -192,7 +244,6 @@
   .led{
     width:12px;height:12px;border-radius:50%;
     background:var(--off);
-    box-shadow:none;
     transition:background .12s, box-shadow .12s;
     flex:none;
   }
@@ -200,6 +251,11 @@
     background:var(--ok-glow);
     box-shadow:0 0 10px 3px var(--ok-glow);
   }
+  .bar{
+    margin-top:6px;height:6px;border-radius:4px;
+    background:var(--line);overflow:hidden;
+  }
+  .bar > span{display:block;height:100%;background:var(--heat);border-radius:4px;transition:width .15s;}
 
   .legend{
     display:flex;flex-wrap:wrap;gap:14px;
@@ -211,91 +267,200 @@
   .legend span{display:inline-flex;align-items:center;gap:6px;}
   .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
 
+  .steps{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+  }
+  @media (max-width:700px){ .steps{grid-template-columns:1fr 1fr;} }
+  .step{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:12.5px;
+    line-height:1.45;
+    color:var(--ink-soft);
+  }
+  .step b{
+    display:block;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    color:var(--accent);
+    margin-bottom:4px;
+  }
+
   footer{
-    margin-top:18px;
+    margin-top:14px;
     font-size:12.5px;
     color:var(--ink-soft);
     line-height:1.5;
   }
 </style>
+
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Sensores y Actuadores &middot; Simulación</div>
-    <h1>Cómo detecta un sensor inductivo</h1>
-    <p class="lead">Acerca el objetivo metálico o pulsa Reproducir para ver el campo electromagnético, las corrientes de Eddy amortiguando la oscilación, y el instante exacto en que conmuta la salida.</p>
+    <div class="eyebrow">Sensores y Actuadores &middot; Simuladores</div>
+    <h1>Simuladores: Sensor Inductivo y Corrientes de Eddy</h1>
+    <p class="lead">Dos demostraciones interactivas del mismo principio físico: cómo un sensor inductivo detecta metales, y qué pasa exactamente dentro del metal cuando eso ocurre.</p>
   </header>
 
-  <div class="stage">
-    <canvas id="scene" width="1600" height="720"></canvas>
-
-    <div class="controls">
-      <div class="slider-row">
-        <div class="slider-label">
-          <span>Distancia del objetivo <b id="distReadout">30.0 mm</b></span>
-          <span>Sn (<span id="snReadout">8.0</span> mm) marcado en rojo</span>
-        </div>
-        <input type="range" id="dist" min="0" max="50" step="0.1" value="30">
-      </div>
-
-      <div class="row2">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);">
-          Material del objetivo
-          <select id="material">
-            <option value="1.0" data-label="Acero dulce">Acero dulce (factor 1.0)</option>
-            <option value="0.7" data-label="Acero inoxidable 300">Acero inoxidable 300 (factor 0.7)</option>
-            <option value="0.45" data-label="Bronce">Bronce (factor 0.45)</option>
-            <option value="0.4" data-label="Aluminio">Aluminio (factor 0.4)</option>
-            <option value="0.35" data-label="Cobre">Cobre (factor 0.35)</option>
-          </select>
-        </label>
-        <button id="playBtn" type="button">▶ Reproducir barrido</button>
-      </div>
-    </div>
-
-    <div class="readouts">
-      <div class="tile status">
-        <div class="k">Salida</div>
-        <div class="v"><span class="led" id="led"></span><span id="statusText">Fuera de rango</span></div>
-      </div>
-      <div class="tile">
-        <div class="k">Amplitud oscilación</div>
-        <div class="v" id="ampReadout">100%</div>
-      </div>
-      <div class="tile">
-        <div class="k">Sn efectivo (material)</div>
-        <div class="v" id="snEffReadout">8.0 mm</div>
-      </div>
-    </div>
-
-    <div class="legend">
-      <span><span class="swatch" style="background:var(--field);"></span>Campo electromagnético</span>
-      <span><span class="swatch" style="background:var(--steel);"></span>Objetivo metálico</span>
-      <span><span class="swatch" style="background:#c0392b;"></span>Distancia nominal Sn</span>
-      <span><span class="swatch" style="background:var(--ok);"></span>Zona de trabajo asegurada (Sa)</span>
-    </div>
+  <div class="tabs" role="tablist" aria-label="Simuladores">
+    <button class="tab-btn" id="tabBtnSensor" role="tab" aria-selected="true" aria-controls="panelSensor" type="button">
+      <span class="num">1</span> Sensor Inductivo
+    </button>
+    <button class="tab-btn" id="tabBtnEddy" role="tab" aria-selected="false" aria-controls="panelEddy" type="button">
+      <span class="num">2</span> Corrientes de Eddy
+    </button>
   </div>
 
-  <footer>Sn nominal del sensor de referencia: 8&nbsp;mm. El factor de corrección del material desplaza la distancia de conmutación real, tal como se explica en la sección de material y factores de corrección de la presentación.</footer>
+  <!-- ============ PANEL 1: SENSOR INDUCTIVO ============ -->
+  <section class="panel" id="panelSensor" role="tabpanel" aria-labelledby="tabBtnSensor">
+    <div class="stage">
+      <canvas id="sensorScene" width="1600" height="720"></canvas>
+
+      <div class="controls">
+        <div class="slider-row">
+          <div class="slider-label">
+            <span>Distancia del objetivo <b id="sensorDistReadout">30.0 mm</b></span>
+            <span>Sn (<span id="sensorSnReadout">8.0</span> mm) marcado en rojo</span>
+          </div>
+          <input type="range" id="sensorDist" min="0" max="50" step="0.1" value="30">
+        </div>
+
+        <div class="row2">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);">
+            Material del objetivo
+            <select id="sensorMaterial">
+              <option value="1.0" data-label="Acero dulce">Acero dulce (factor 1.0)</option>
+              <option value="0.7" data-label="Acero inoxidable 300">Acero inoxidable 300 (factor 0.7)</option>
+              <option value="0.45" data-label="Bronce">Bronce (factor 0.45)</option>
+              <option value="0.4" data-label="Aluminio">Aluminio (factor 0.4)</option>
+              <option value="0.35" data-label="Cobre">Cobre (factor 0.35)</option>
+            </select>
+          </label>
+          <button id="sensorPlayBtn" class="primary" type="button">▶ Reproducir barrido</button>
+        </div>
+      </div>
+
+      <div class="readouts">
+        <div class="tile status">
+          <div class="k">Salida</div>
+          <div class="v"><span class="led" id="sensorLed"></span><span id="sensorStatusText">Fuera de rango</span></div>
+        </div>
+        <div class="tile">
+          <div class="k">Amplitud oscilación</div>
+          <div class="v" id="sensorAmpReadout">100%</div>
+        </div>
+        <div class="tile">
+          <div class="k">Sn efectivo (material)</div>
+          <div class="v" id="sensorSnEffReadout">8.0 mm</div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--field);"></span>Campo electromagnético</span>
+        <span><span class="swatch" style="background:var(--steel);"></span>Objetivo metálico</span>
+        <span><span class="swatch" style="background:#c0392b;"></span>Distancia nominal Sn</span>
+        <span><span class="swatch" style="background:var(--ok);"></span>Zona de trabajo asegurada (Sa)</span>
+      </div>
+    </div>
+    <footer>Sn nominal del sensor de referencia: 8&nbsp;mm. El factor de corrección del material desplaza la distancia de conmutación real.</footer>
+  </section>
+
+  <!-- ============ PANEL 2: CORRIENTES DE EDDY ============ -->
+  <section class="panel" id="panelEddy" role="tabpanel" aria-labelledby="tabBtnEddy" hidden>
+    <div class="stage">
+      <canvas id="eddyScene" width="1600" height="820"></canvas>
+
+      <div class="controls flow">
+        <div class="field-group">
+          <div class="lbl"><span>Frecuencia del campo</span><b id="eddyFreqLabel">Media</b></div>
+          <input type="range" id="eddyFreq" min="1" max="10" step="1" value="5">
+        </div>
+        <div class="field-group" style="flex:1 1 200px;">
+          <div class="lbl"><span>Material del bloque</span><span></span></div>
+          <select id="eddyMaterial">
+            <option value="1.0" data-cond="alta">Acero dulce (ferromagnético)</option>
+            <option value="0.55" data-cond="media">Acero inoxidable 300</option>
+            <option value="0.85" data-cond="muyalta">Cobre</option>
+            <option value="0.8" data-cond="alta2">Aluminio</option>
+          </select>
+        </div>
+        <button id="eddyMetalBtn" class="toggle" type="button" aria-pressed="true">🔩 Bloque metálico: ON</button>
+        <button id="eddyPlayBtn" class="primary" type="button">⏸ Pausar</button>
+      </div>
+
+      <div class="readouts">
+        <div class="tile">
+          <div class="k">Corriente inducida (Eddy)</div>
+          <div class="v" id="eddyEddyReadout">—</div>
+          <div class="bar"><span id="eddyEddyBar" style="width:0%"></span></div>
+        </div>
+        <div class="tile">
+          <div class="k">Pérdida por calor (Joule)</div>
+          <div class="v" id="eddyHeatReadout">—</div>
+          <div class="bar"><span id="eddyHeatBar" style="width:0%"></span></div>
+        </div>
+        <div class="tile">
+          <div class="k">Profundidad de penetración</div>
+          <div class="v" id="eddyDepthReadout">—</div>
+          <div class="bar"><span id="eddyDepthBar" style="width:0%"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step"><b>1. Campo variable</b>La bobina genera un campo magnético que oscila a alta frecuencia, atravesando el espacio frente al sensor.</div>
+      <div class="step"><b>2. Voltaje inducido</b>Al llegar al metal, ese campo cambiante induce un voltaje dentro del material (Ley de Faraday).</div>
+      <div class="step"><b>3. Remolinos cerrados</b>Como el metal es sólido, el voltaje no tiene por dónde salir: forma bucles cerrados de corriente (Eddy).</div>
+      <div class="step"><b>4. Frenado y calor</b>Esas corrientes generan un campo opuesto (Ley de Lenz) y se disipan como calor, amortiguando la oscilación del sensor.</div>
+    </div>
+    <footer>Prueba apagar el bloque metálico: el campo atraviesa el espacio sin ninguna oposición. Prueba también subir la frecuencia: las corrientes se concentran cada vez más cerca de la superficie (efecto piel).</footer>
+  </section>
 </div>
 
 <script>
+/* ===================== TABS ===================== */
 (function(){
-  const canvas = document.getElementById('scene');
-  const ctx = canvas.getContext('2d');
-  const distSlider = document.getElementById('dist');
-  const distReadout = document.getElementById('distReadout');
-  const snReadout = document.getElementById('snReadout');
-  const snEffReadout = document.getElementById('snEffReadout');
-  const ampReadout = document.getElementById('ampReadout');
-  const led = document.getElementById('led');
-  const statusText = document.getElementById('statusText');
-  const materialSel = document.getElementById('material');
-  const playBtn = document.getElementById('playBtn');
+  const tabSensor = document.getElementById('tabBtnSensor');
+  const tabEddy = document.getElementById('tabBtnEddy');
+  const panelSensor = document.getElementById('panelSensor');
+  const panelEddy = document.getElementById('panelEddy');
 
-  const SN_NOMINAL = 8; // mm, reference switching distance
+  function activate(tab){
+    const sensorActive = tab === 'sensor';
+    tabSensor.setAttribute('aria-selected', sensorActive ? 'true':'false');
+    tabEddy.setAttribute('aria-selected', sensorActive ? 'false':'true');
+    panelSensor.hidden = !sensorActive;
+    panelEddy.hidden = sensorActive;
+    window.__activeTab = tab;
+  }
+  window.__activeTab = 'sensor';
+  tabSensor.addEventListener('click', () => activate('sensor'));
+  tabEddy.addEventListener('click', () => activate('eddy'));
+})();
+
+/* ===================== SIMULADOR 1: SENSOR INDUCTIVO ===================== */
+(function(){
+  const canvas = document.getElementById('sensorScene');
+  const ctx = canvas.getContext('2d');
+  const distSlider = document.getElementById('sensorDist');
+  const distReadout = document.getElementById('sensorDistReadout');
+  const snReadout = document.getElementById('sensorSnReadout');
+  const snEffReadout = document.getElementById('sensorSnEffReadout');
+  const ampReadout = document.getElementById('sensorAmpReadout');
+  const led = document.getElementById('sensorLed');
+  const statusText = document.getElementById('sensorStatusText');
+  const materialSel = document.getElementById('sensorMaterial');
+  const playBtn = document.getElementById('sensorPlayBtn');
+
+  const SN_NOMINAL = 8;
   let t = 0;
   let playing = false;
   let playDir = -1;
@@ -482,7 +647,7 @@
       if (v >= 50){ v = 50; playDir = -1; }
       distSlider.value = v.toFixed(1);
     }
-    draw();
+    if (window.__activeTab === 'sensor') draw();
     requestAnimationFrame(loop);
   }
 
@@ -493,8 +658,244 @@
     playBtn.textContent = playing ? '⏸ Pausar barrido' : '▶ Reproducir barrido';
   });
 
+  draw();
+  requestAnimationFrame(loop);
+})();
+
+/* ===================== SIMULADOR 2: CORRIENTES DE EDDY ===================== */
+(function(){
+  const canvas = document.getElementById('eddyScene');
+  const ctx = canvas.getContext('2d');
+  const freqSlider = document.getElementById('eddyFreq');
+  const freqLabel = document.getElementById('eddyFreqLabel');
+  const materialSel = document.getElementById('eddyMaterial');
+  const metalBtn = document.getElementById('eddyMetalBtn');
+  const playBtn = document.getElementById('eddyPlayBtn');
+  const eddyReadout = document.getElementById('eddyEddyReadout');
+  const heatReadout = document.getElementById('eddyHeatReadout');
+  const depthReadout = document.getElementById('eddyDepthReadout');
+  const eddyBar = document.getElementById('eddyEddyBar');
+  const heatBar = document.getElementById('eddyHeatBar');
+  const depthBar = document.getElementById('eddyDepthBar');
+
+  let t = 0;
+  let playing = true;
+  let metalOn = true;
+
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const freqLabels = {1:'Muy baja',2:'Baja',3:'Baja',4:'Media-baja',5:'Media',6:'Media',7:'Media-alta',8:'Alta',9:'Alta',10:'Muy alta'};
+
+  function condFactor(){ return parseFloat(materialSel.value); }
+
+  function draw(){
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    const bg = cssVar('--panel') || '#fff';
+    const ink = cssVar('--ink') || '#222';
+    const inkSoft = cssVar('--ink-soft') || '#777';
+    const line = cssVar('--line') || '#ddd';
+    const field = cssVar('--field') || '#d99b45';
+    const eddyC = cssVar('--eddy') || '#c0392b';
+    const steel = cssVar('--steel') || '#8b8f96';
+    const steelDark = cssVar('--steel-dark') || '#5b5e63';
+    const heat = cssVar('--heat') || '#e0632f';
+
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+    const freq = parseInt(freqSlider.value,10);
+    const omega = 1.2 + freq*0.55;
+    const cond = condFactor();
+
+    const coilCX = W*0.5, coilCY = H*0.16;
+    ctx.strokeStyle = field;
+    ctx.lineWidth = 5;
+    for(let i=0;i<4;i++){
+      ctx.beginPath();
+      ctx.ellipse(coilCX - 60 + i*40, coilCY, 22, 34, 0, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = ink;
+    ctx.font = '700 22px "Archivo Expanded", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BOBINA DEL SENSOR', coilCX, coilCY-60);
+    ctx.textAlign = 'left';
+
+    const blockTop = H*0.42;
+    const nLines = 7;
+    const amp = 22;
+    ctx.lineWidth = 3;
+    for(let i=0;i<nLines;i++){
+      const x0 = coilCX - 220 + i*(440/(nLines-1));
+      const phase = t*omega + i*0.5;
+      ctx.strokeStyle = field;
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      for(let y=coilCY+40; y<=blockTop; y+=6){
+        const prog = (y-(coilCY+40))/(blockTop-(coilCY+40));
+        const wob = Math.sin(phase - prog*6) * amp * (1-prog*0.3);
+        const x = x0 + wob;
+        if (y===coilCY+40) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      const dir = Math.sin(phase) >= 0 ? 1 : -1;
+      ctx.fillStyle = field;
+      ctx.beginPath();
+      const ax = x0, ay = blockTop-14;
+      ctx.moveTo(ax-6, ay);
+      ctx.lineTo(ax+6, ay);
+      ctx.lineTo(ax, ay + 12*dir);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    const blockH = H*0.34;
+    const blockW = W*0.72;
+    const blockX = (W-blockW)/2;
+    const blockY = blockTop;
+
+    if (metalOn){
+      const grad = ctx.createLinearGradient(0,blockY,0,blockY+blockH);
+      grad.addColorStop(0, steel);
+      grad.addColorStop(1, steelDark);
+      ctx.fillStyle = grad;
+      ctx.fillRect(blockX, blockY, blockW, blockH);
+      ctx.strokeStyle = line;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(blockX, blockY, blockW, blockH);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 16px "IBM Plex Mono", monospace';
+      ctx.textAlign = 'center';
+      const matLabel = materialSel.selectedOptions[0].textContent;
+      ctx.fillText(matLabel, blockX+blockW/2, blockY+blockH+30);
+      ctx.textAlign = 'left';
+    } else {
+      ctx.strokeStyle = line;
+      ctx.setLineDash([8,8]);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(blockX, blockY, blockW, blockH);
+      ctx.setLineDash([]);
+      ctx.fillStyle = inkSoft;
+      ctx.font = '600 15px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Sin material conductor — el campo pasa de largo', blockX+blockW/2, blockY+blockH/2);
+      ctx.font = '600 14px "IBM Plex Mono", monospace';
+      ctx.fillText('(no metal target)', blockX+blockW/2, blockY+blockH+30);
+      ctx.textAlign = 'left';
+    }
+
+    let eddyStrength = 0, heatLevel = 0, depthPct = 0;
+
+    if (metalOn){
+      const freqNorm = freq/10;
+      depthPct = Math.max(0.12, 1 - freqNorm*0.8);
+      const bandH = blockH * depthPct;
+
+      eddyStrength = cond * (0.5 + 0.5*Math.sin(t*omega)**2);
+      heatLevel = eddyStrength * cond;
+
+      const nLoops = 5;
+      for(let i=0;i<nLoops;i++){
+        const lx = blockX + blockW*( (i+0.5)/nLoops );
+        const ly = blockY + bandH*0.5 + Math.min(bandH*0.3, 14);
+        const rot = t*3*omega*0.35 + i;
+        const rx = Math.min(blockW/(nLoops*1.6), 55);
+        const ry = Math.min(bandH*0.42, 26);
+
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.strokeStyle = eddyC;
+        ctx.globalAlpha = 0.55 + 0.4*eddyStrength;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(0,0, rx, ry, 0, 0, Math.PI*2);
+        ctx.stroke();
+
+        const ang = rot % (Math.PI*2);
+        const px = Math.cos(ang)*rx, py = Math.sin(ang)*ry;
+        const tangAng = ang + Math.PI/2;
+        ctx.translate(px,py);
+        ctx.rotate(tangAng);
+        ctx.fillStyle = eddyC;
+        ctx.beginPath();
+        ctx.moveTo(-6,-5); ctx.lineTo(8,0); ctx.lineTo(-6,5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.globalAlpha = 0.35*heatLevel;
+      ctx.fillStyle = heat;
+      ctx.fillRect(blockX, blockY, blockW, bandH);
+      ctx.globalAlpha = 1;
+
+      ctx.strokeStyle = eddyC;
+      ctx.setLineDash([4,5]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(blockX, blockY+bandH);
+      ctx.lineTo(blockX+blockW, blockY+bandH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = eddyC;
+      ctx.font = '600 12px "IBM Plex Mono", monospace';
+      ctx.fillText('zona de corrientes de Eddy (efecto piel)', blockX+8, blockY+bandH+16);
+    }
+
+    if (metalOn && eddyStrength > 0.15){
+      ctx.strokeStyle = eddyC;
+      ctx.lineWidth = 2.5;
+      ctx.globalAlpha = 0.6;
+      for(let i=0;i<3;i++){
+        const x = blockX + blockW*(0.2+i*0.3);
+        const y0 = blockY - 6, y1 = blockY - 34 - 6*Math.sin(t*4+i);
+        ctx.beginPath();
+        ctx.moveTo(x,y0); ctx.lineTo(x,y1);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x-6,y1+10); ctx.lineTo(x,y1); ctx.lineTo(x+6,y1+10);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = eddyC;
+      ctx.font = '600 13px "IBM Plex Mono", monospace';
+      ctx.fillText('campo opuesto (Ley de Lenz)', blockX+blockW*0.2-10, blockY-46);
+    }
+
+    eddyReadout.textContent = metalOn ? Math.round(eddyStrength*100)+'%' : '0%';
+    heatReadout.textContent = metalOn ? Math.round(heatLevel*100)+'%' : '0%';
+    depthReadout.textContent = metalOn ? Math.round(depthPct*100)+'% del bloque' : '—';
+    eddyBar.style.width = (metalOn ? eddyStrength*100 : 0)+'%';
+    heatBar.style.width = (metalOn ? heatLevel*100 : 0)+'%';
+    depthBar.style.width = (metalOn ? depthPct*100 : 0)+'%';
+    freqLabel.textContent = freqLabels[freq];
+  }
+
+  function loop(){
+    if (playing) t += 0.016;
+    if (window.__activeTab === 'eddy') draw();
+    requestAnimationFrame(loop);
+  }
+
+  freqSlider.addEventListener('input', draw);
+  materialSel.addEventListener('change', draw);
+  metalBtn.addEventListener('click', () => {
+    metalOn = !metalOn;
+    metalBtn.setAttribute('aria-pressed', metalOn ? 'true':'false');
+    metalBtn.textContent = metalOn ? '🔩 Bloque metálico: ON' : '🔩 Bloque metálico: OFF';
+  });
+  playBtn.addEventListener('click', () => {
+    playing = !playing;
+    playBtn.textContent = playing ? '⏸ Pausar' : '▶ Reproducir';
+  });
+
+  draw();
   requestAnimationFrame(loop);
 })();
 </script>
+
 </body>
 </html>
