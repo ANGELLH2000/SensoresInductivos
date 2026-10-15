@@ -1,0 +1,526 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Línea Llenadora de Café</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f3f4f1; --panel:#ffffff; --ink:#1a2320; --mute:#58655e; --line:#cbd3cd;
+  --belt:#3b4650; --frame:#dfe4df; --metal:#8b959c; --glass:#6fa8c2; --coffee:#5b3a22;
+  --dos:#b97a0c; --pes:#2a8556; --cer:#c0502a; --ter:#7650b0; --ok:#2a8556; --bad:#c0392b;
+  --fd:'Archivo','Helvetica Neue',Arial,sans-serif; --fb:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif; --fm:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12171a; --panel:#1b2226; --ink:#e7eee9; --mute:#9aa8a1; --line:#2f3b41;
+  --belt:#9aa7b0; --frame:#232d32; --metal:#7d8991; --glass:#6fa8c2; --coffee:#8a5e3a;
+  --dos:#e0a23a; --pes:#4fc58a; --cer:#ee7e56; --ter:#a98be0; --ok:#4fc58a; --bad:#ee6f5f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12171a; --panel:#1b2226; --ink:#e7eee9; --mute:#9aa8a1; --line:#2f3b41;
+  --belt:#9aa7b0; --frame:#232d32; --metal:#7d8991; --glass:#6fa8c2; --coffee:#8a5e3a;
+  --dos:#e0a23a; --pes:#4fc58a; --cer:#ee7e56; --ter:#a98be0; --ok:#4fc58a; --bad:#ee6f5f; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:15px;line-height:1.5;margin:0;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--fd);font-weight:700;font-size:clamp(22px,3.2vw,32px);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--mute);margin:4px 0 0;max-width:72ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.stagebox{overflow-x:auto;padding:6px}
+#main{display:block;min-width:980px;width:100%;height:auto}
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:10px 12px}
+button,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:6px 12px;cursor:pointer}
+button:hover,select:hover{border-color:var(--mute)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--pes);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);min-width:104px}
+.scrub{flex:1 1 220px;display:flex;align-items:center;gap:8px;min-width:200px}
+.scrub input[type=range]{flex:1;accent-color:var(--pes)}
+.tm{font-family:var(--fm);font-size:13px;color:var(--mute);min-width:70px;text-align:right}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--mute);font-size:14px}
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+ol#steps{list-style:none;margin:0;padding:6px;display:flex;flex-direction:column;gap:2px}
+ol#steps button{width:100%;text-align:left;display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;border:0;border-radius:4px;background:transparent;padding:7px 8px}
+ol#steps button .dot{width:10px;height:10px;border-radius:50%;background:var(--line)}
+ol#steps button .nm{font-weight:500}
+ol#steps button .rt{font-family:var(--fm);font-size:12px;color:var(--mute)}
+ol#steps button[aria-current="step"]{background:var(--bg);box-shadow:inset 3px 0 0 var(--c,var(--ink))}
+ol#steps button[aria-current="step"] .dot{background:var(--c,var(--ink))}
+ol#steps button.done .dot{background:var(--mute)}
+.panel{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.panel h2{font-family:var(--fd);font-size:19px;margin:0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.tag{font-family:var(--fm);font-size:12px;font-weight:400;color:var(--mute)}
+.pend{font-size:12px;font-family:var(--fm);color:var(--ter);border:1px solid var(--ter);border-radius:3px;padding:1px 6px}
+.panel p{margin:0;max-width:72ch}
+dl.data{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 14px;margin:2px 0 0}
+dl.data div{border-top:1px solid var(--line);padding-top:5px}
+dl.data dt{font-size:12px;color:var(--mute)}
+dl.data dd{margin:0;font-family:var(--fm);font-size:14px}
+.insets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.insets{grid-template-columns:minmax(0,1fr)}}
+.inset{padding:8px 10px 10px;transition:opacity .25s}
+.inset h3{font-family:var(--fd);font-size:15px;margin:0 0 4px}
+.inset svg{width:100%;height:auto;display:block}
+.inset .cap{font-size:13px;color:var(--mute);margin:4px 0 0}
+.inset svg .t-sm{font-size:9.5px}
+.inset svg .t-mono{font-size:11px}
+.inset svg #pRead{font-size:15px}
+.foot{font-size:13px;color:var(--mute);max-width:90ch;margin:0}
+svg text{font-family:var(--fb);fill:var(--ink)}
+.t-lbl{font-size:14px}.t-sm{font-size:12.5px;fill:var(--mute)}.t-mono{font-family:var(--fm);font-size:13px}
+.lead{stroke:var(--mute);stroke-width:1;fill:none}
+.nolbl .lbl{display:none}
+.glass{fill:var(--glass);fill-opacity:.22;stroke:var(--ink);stroke-width:1.6}
+.metal{fill:var(--metal);fill-opacity:.55;stroke:var(--ink);stroke-width:1.2}
+.coffee{fill:var(--coffee)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Línea llenadora de café en grano</h1>
+    <p class="sub">Recorrido de un frasco por las cinco estaciones: dosificado, pesaje y rechazo, cerrado de la tapa y sellado con banda termocontraíble (pendiente de diseño). La vista lateral está a escala en milímetros; los tiempos de la animación son esquemáticos.</p>
+  </header>
+
+  <div class="card stagebox">
+<svg id="main" viewBox="-70 -205 1570 740" role="img" aria-label="Vista lateral de la línea: un frasco avanza por la faja y se detiene en el dosificador, el pesaje lateral, el cerrado de tapa y la estación de termocontraíble.">
+  <defs><clipPath id="jarclip"><rect x="-53" y="212" width="106" height="116"/></clipPath></defs>
+
+  <g fill="none" stroke="var(--mute)" stroke-width="1.2">
+    <path d="M0 492V498H100V492"/><path d="M100 492V498H450V492"/><path d="M475 492V498H725V492"/><path d="M750 492V498H1000V492"/><path d="M1025 492V498H1275V492"/><path d="M1275 492V498H1400V492"/>
+  </g>
+  <text class="t-sm" x="50" y="518" text-anchor="middle">Entrada</text>
+  <text class="t-sm" x="275" y="518" text-anchor="middle">Dosificador · X 100–450</text>
+  <text class="t-sm" x="600" y="518" text-anchor="middle">Pesaje y transferencia · 475–725</text>
+  <text class="t-sm" x="875" y="518" text-anchor="middle">Tapado · 750–1000</text>
+  <text class="t-sm" x="1150" y="518" text-anchor="middle">Reserva de sellado · 1025–1275</text>
+  <text class="t-sm" x="1338" y="518" text-anchor="middle">Salida</text>
+
+  <rect x="0" y="340" width="1400" height="140" fill="var(--frame)" stroke="var(--line)"/>
+  <circle cx="27" cy="357" r="25" fill="var(--panel)" stroke="var(--belt)" stroke-width="2"/>
+  <circle cx="1373" cy="357" r="25" fill="var(--panel)" stroke="var(--belt)" stroke-width="2"/>
+  <g id="roll1" stroke="var(--belt)" stroke-width="2"><line x1="27" y1="337" x2="27" y2="377"/><line x1="7" y1="357" x2="47" y2="357"/></g>
+  <g id="roll2" stroke="var(--belt)" stroke-width="2"><line x1="1373" y1="337" x2="1373" y2="377"/><line x1="1353" y1="357" x2="1393" y2="357"/></g>
+  <rect x="27" y="330" width="1346" height="3" fill="var(--belt)"/>
+  <line id="beltDash" x1="27" y1="334.5" x2="1373" y2="334.5" stroke="var(--belt)" stroke-width="3" stroke-dasharray="3 7"/>
+  <line x1="27" y1="382" x2="1373" y2="382" stroke="var(--belt)" stroke-width="2" opacity=".5"/>
+  <g class="lbl">
+    <text class="t-sm" x="14" y="470">Bastidor 1400 × 216 × 140 mm</text>
+    <path class="lead" d="M27 332L-10 280"/><text class="t-lbl" x="-62" y="268">Rodillo conducido Ø50</text>
+    <path class="lead" d="M1373 332L1400 300"/><text class="t-lbl" x="1330" y="292">Rodillo motriz Ø50</text>
+    <path class="lead" d="M1395 365L1435 395"/><text class="t-lbl" x="1340" y="415">Motor de la faja</text><text class="t-sm" x="1340" y="432">PWM · 15 rpm de referencia</text>
+    <path class="lead" d="M440 331L440 305"/><text class="t-lbl" x="360" y="299">Banda PVC 150 × 2</text>
+  </g>
+
+  <g>
+    <rect id="fc1" x="235" y="345" width="20" height="12" rx="2" fill="var(--panel)" stroke="var(--ink)"/><text class="t-sm lbl" x="245" y="373" text-anchor="middle">S1_DOS</text>
+    <rect id="fc2" x="560" y="345" width="20" height="12" rx="2" fill="var(--panel)" stroke="var(--ink)"/><text class="t-sm lbl" x="570" y="373" text-anchor="middle">S2_PES</text>
+    <rect id="fc3" x="835" y="345" width="20" height="12" rx="2" fill="var(--panel)" stroke="var(--ink)"/><text class="t-sm lbl" x="845" y="373" text-anchor="middle">S3_TAP</text>
+    <rect id="fc4" x="1110" y="345" width="20" height="12" rx="2" fill="var(--panel)" stroke="var(--ink)"/><text class="t-sm lbl" x="1120" y="373" text-anchor="middle">S4_TER</text>
+  </g>
+  <text class="t-sm lbl" x="40" y="400">Sensores FC-51 de presencia, a ≈ 30 mm antes del centro de cada estación</text>
+
+  <g id="g-dos">
+    <rect x="195" y="179" width="14" height="161" fill="var(--frame)" stroke="var(--line)"/>
+    <rect x="520" y="179" width="14" height="161" fill="var(--frame)" stroke="var(--line)"/>
+    <rect x="190" y="175" width="45" height="4" class="metal"/><rect x="315" y="175" width="225" height="4" class="metal"/>
+    <rect x="223" y="-139" width="284" height="148" fill="none" stroke="var(--ink)" stroke-width="1.6"/>
+    <rect x="224" y="-80" width="282" height="88" class="coffee" opacity=".85"/>
+    <rect x="223" y="-159" width="284" height="20" class="metal"/>
+    <rect x="215" y="9" width="300" height="4" fill="var(--glass)" fill-opacity=".5" stroke="var(--ink)" stroke-width="1.2"/>
+    <rect x="334" y="-181" width="62" height="22" rx="2" class="metal"/><circle cx="349" cy="-170" r="7" fill="var(--panel)" stroke="var(--ink)"/><circle cx="381" cy="-170" r="7" fill="var(--panel)" stroke="var(--ink)"/>
+    <path d="M365 -159L310 -80M365 -159L420 -80" stroke="var(--dos)" stroke-width="1" stroke-dasharray="4 4" fill="none"/>
+    <rect x="343" y="16" width="44" height="46" rx="3" class="metal"/><line x1="365" y1="9" x2="365" y2="16" stroke="var(--ink)" stroke-width="3"/>
+    <g id="cB"><rect x="-40" y="13" width="80" height="158" fill="none" stroke="var(--ink)" stroke-width="1.6"/><rect class="cf coffee" x="-39" y="13" width="78" height="0" opacity=".9"/></g>
+    <g id="cA"><rect x="-40" y="13" width="80" height="158" fill="none" stroke="var(--ink)" stroke-width="1.6"/><rect class="cf coffee" x="-39" y="13" width="78" height="0" opacity=".9"/></g>
+    <rect id="stream" x="245" y="171" width="60" height="62" class="coffee" opacity="0"/>
+    <rect x="196" y="292" width="14" height="22" rx="2" fill="var(--panel)" stroke="var(--ink)"/>
+    <path id="irBeam" d="M210 303H300" stroke="var(--dos)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0"/>
+    <g class="lbl">
+      <path class="lead" d="M507 -100L560 -118"/><text class="t-lbl" x="564" y="-114">Tolva Ø284 × 148,5 (2 kg de café)</text>
+      <path class="lead" d="M396 -170L560 -170"/><text class="t-lbl" x="564" y="-166">HC-SR04: nivel de la tolva</text>
+      <path class="lead" d="M515 11L560 20"/><text class="t-lbl" x="564" y="26">Disco separador Ø300 × 4</text>
+      <path class="lead" d="M387 42L560 62"/><text class="t-lbl" x="564" y="68">Servo MG995 (±180°) + sensor INA219</text>
+      <path class="lead" d="M540 177L548 154"/><text class="t-lbl" x="548" y="150">Base con agujero Ø80</text>
+      <path class="lead" d="M120 100L325 100"/><text class="t-lbl" x="-62" y="84">Contenedores Ø80 × 160</text><text class="t-sm" x="-62" y="100">804,2 mL ≈ 224,8 g teóricos</text>
+      <path class="lead" d="M196 303L150 303"/><text class="t-lbl" x="12" y="322">Sensor IR de frasco</text>
+      <path class="lead" d="M275 232L275 262" stroke-dasharray="3 3"/><text class="t-sm" x="283" y="252">≈ 4 cm sobre el pico</text>
+    </g>
+  </g>
+
+  <g id="g-pes">
+    <rect x="560" y="372" width="80" height="14" class="metal"/>
+    <rect x="545" y="334" width="30" height="38" class="metal"/><rect x="625" y="334" width="30" height="38" class="metal"/>
+    <rect x="575" y="342" width="50" height="10" fill="var(--pes)" fill-opacity=".5" stroke="var(--ink)"/>
+    <rect x="540" y="326" width="120" height="6" fill="var(--pes)" fill-opacity=".3" stroke="var(--ink)" stroke-width="1.4"/>
+    <rect x="672" y="352" width="46" height="24" rx="2" fill="var(--panel)" stroke="var(--ink)"/><text class="t-sm" x="695" y="368" text-anchor="middle">HX711</text>
+    <rect x="590" y="262" width="44" height="40" rx="3" class="metal"/>
+    <line id="paddle" x1="612" y1="302" x2="612" y2="326" stroke="var(--pes)" stroke-width="5" stroke-linecap="round"/>
+    <rect x="770" y="400" width="90" height="68" rx="3" fill="none" stroke="var(--bad)" stroke-width="1.6" stroke-dasharray="6 4"/>
+    <text class="t-sm" x="815" y="486" text-anchor="middle" style="fill:var(--bad)">Rechazo</text>
+    <g class="lbl">
+      <path class="lead" d="M634 275L690 255"/><text class="t-lbl" x="694" y="251">Servo MG946R</text><text class="t-sm" x="694" y="267">+ paleta de 100 mm</text>
+      <path class="lead" d="M655 328L690 300"/><text class="t-lbl" x="694" y="296">Plataforma</text><text class="t-sm" x="694" y="312">lateral de pesaje</text>
+      <path class="lead" d="M600 386L600 410"/><text class="t-lbl" x="548" y="426">Celda YZC-131A 5 kg</text>
+      <text class="t-sm" x="548" y="443">+ HX711 + PIC18F57Q43</text>
+    </g>
+  </g>
+
+  <g id="g-cer">
+    <rect id="clampL" x="796" y="282" width="12" height="48" class="metal" opacity="0"/>
+    <rect id="clampR" x="942" y="282" width="12" height="48" class="metal" opacity="0"/>
+    <g id="wheelL"><rect x="-64" y="188" width="64" height="30" rx="3" class="metal"/><circle cx="0" cy="203" r="19" fill="var(--cer)" fill-opacity=".25" stroke="var(--ink)" stroke-width="1.6"/><g id="spL" stroke="var(--ink)" stroke-width="2"><line x1="-19" y1="203" x2="19" y2="203"/><line x1="0" y1="184" x2="0" y2="222"/></g></g>
+    <circle cx="949" cy="203" r="19" fill="var(--metal)" fill-opacity=".4" stroke="var(--ink)" stroke-width="1.6"/><g id="spR" stroke="var(--ink)" stroke-width="2"><line x1="930" y1="203" x2="968" y2="203"/><line x1="949" y1="184" x2="949" y2="222"/></g>
+    <rect x="1000" y="112" width="46" height="46" rx="3" class="metal"/><circle cx="1023" cy="135" r="4" fill="var(--ink)"/>
+    <line id="crank" x1="1023" y1="135" x2="1023" y2="118" stroke="var(--cer)" stroke-width="4" stroke-linecap="round"/>
+    <g class="lbl">
+      <path class="lead" d="M740 203L700 203"/><text class="t-lbl" x="476" y="199">2 ruedas motrices JGB37-520</text><text class="t-sm" x="476" y="215">(12 V, 66 rpm) sobre el carro</text>
+      <path class="lead" d="M968 203L1010 203"/><text class="t-lbl" x="1014" y="199">2 ruedas fijas</text>
+      <path class="lead" d="M1023 112L1023 104"/><text class="t-lbl" x="940" y="84">Servo MG995</text><text class="t-sm" x="940" y="100">+ yugo escocés</text>
+      <path class="lead" d="M802 330L780 388"/><text class="t-sm" x="690" y="402">Mordaza cóncava + cuña en V</text>
+    </g>
+  </g>
+
+  <g id="g-chute">
+    <rect x="677" y="160" width="116" height="6" class="metal" stroke-dasharray="4 3"/>
+    <rect x="677" y="160" width="8" height="36" class="metal" stroke-dasharray="4 3"/><rect x="785" y="160" width="8" height="36" class="metal" stroke-dasharray="4 3"/>
+    <rect id="capChute" x="681" y="170" width="108" height="24" rx="3" fill="var(--cer)" fill-opacity=".2" stroke="var(--ink)" stroke-width="1.4"/>
+    <g class="lbl"><path class="lead" d="M735 160L735 130"/><text class="t-lbl" x="640" y="122">Alimentación de tapa</text><text class="t-sm" x="640" y="138">(por definir)</text></g>
+  </g>
+
+  <g id="g-ter">
+    <circle cx="1150" cy="112" r="26" fill="var(--ter)" fill-opacity=".2" stroke="var(--ter)" stroke-width="1.6" stroke-dasharray="5 3"/><circle cx="1150" cy="112" r="8" fill="none" stroke="var(--ter)"/>
+    <rect x="1225" y="172" width="84" height="32" rx="4" fill="var(--ter)" fill-opacity=".25" stroke="var(--ter)" stroke-dasharray="5 3"/><polygon points="1225,180 1200,188 1200,196 1225,196" fill="var(--ter)" fill-opacity=".25" stroke="var(--ter)" stroke-dasharray="5 3"/>
+    <g id="hot" stroke="var(--ter)" stroke-width="2" fill="none" opacity="0">
+      <path d="M1196 182c-8-6-16 6-24 0s-14 6-18 2"/><path d="M1196 190c-8-6-16 6-24 0s-14 6-18 2"/><path d="M1196 198c-8-6-16 6-24 0s-14 6-18 2"/>
+    </g>
+    <text class="t-sm" x="1150" y="64" text-anchor="middle" style="fill:var(--ter)">PENDIENTE DE DISEÑO</text>
+    <g class="lbl">
+      <path class="lead" d="M1176 112L1215 100"/><text class="t-lbl" x="1219" y="96">Rollo de manga termocontraíble</text><text class="t-sm" x="1219" y="112">ancho plano &gt; 170 mm (perímetro ≈ 340 mm)</text>
+      <path class="lead" d="M1270 172L1290 150"/><text class="t-lbl" x="1222" y="142">Aire caliente controlado</text><text class="t-sm" x="1222" y="158">equipo y tiempos por definir</text>
+    </g>
+  </g>
+
+  <g id="jar">
+    <rect id="jFill" x="-52" y="326" width="104" height="0" class="coffee" clip-path="url(#jarclip)"/>
+    <path class="glass" d="M-56.5 322Q-56.5 330 -48 330H48Q56.5 330 56.5 322V246Q56.5 236 50 235V213.4H-50V235Q-56.5 236 -56.5 246Z"/>
+    <g id="cap"><rect x="-54.2" y="0" width="108.4" height="24" rx="3" fill="var(--cer)" fill-opacity=".35" stroke="var(--ink)" stroke-width="1.6"/><g id="capTicks" stroke="var(--ink)" stroke-width="1.6"></g></g>
+    <g id="sleeve"><path id="sleeveP" fill="var(--ter)" fill-opacity=".4" stroke="var(--ter)" stroke-width="1.6" d=""/></g>
+  </g>
+  <text id="stateTxt" class="t-mono" x="1400" y="-185" text-anchor="end" font-size="15"></text>
+</svg>
+  </div>
+
+  <div class="card controls">
+    <button class="primary" id="play" type="button">Pausar</button>
+    <button id="prev" type="button" aria-label="Fase anterior">◀ Fase</button>
+    <button id="next" type="button" aria-label="Fase siguiente">Fase ▶</button>
+    <button id="reset" type="button">Reiniciar</button>
+    <div class="scrub"><input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Posición en el ciclo"><span class="tm" id="tm">0,0 s</span></div>
+    <label for="spd" class="chk">Velocidad
+      <select id="spd"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+    <label class="chk" for="rej"><input type="checkbox" id="rej"> Dosis fuera de tolerancia (rechazo)</label>
+    <label class="chk" for="lbl"><input type="checkbox" id="lbl" checked> Etiquetas</label>
+  </div>
+
+  <div class="two">
+    <div class="card"><ol id="steps"></ol></div>
+    <div class="card panel" aria-live="polite">
+      <h2><span id="pTitle"></span><span class="tag" id="pReal"></span><span class="pend" id="pPend" hidden>pendiente de diseño</span></h2>
+      <p id="pDesc"></p>
+      <dl class="data" id="data"></dl>
+    </div>
+  </div>
+
+  <div class="insets">
+    <div class="card inset" id="insP">
+      <h3 style="color:var(--pes)">Pesaje y rechazo · vista superior</h3>
+      <svg viewBox="0 0 360 310" role="img" aria-label="Vista superior del pesaje: la paleta de entrada pasa el frasco a la plataforma, se mide la masa y la paleta del MG946R lo devuelve a la faja o lo desvía al rechazo.">
+        <rect x="8" y="228" width="344" height="62" fill="var(--frame)" stroke="var(--line)"/><text class="t-sm" x="14" y="304">Faja</text>
+        <rect x="132" y="88" width="104" height="104" fill="var(--pes)" fill-opacity=".14" stroke="var(--pes)" stroke-width="1.6"/>
+        <text class="t-sm" x="184" y="82" text-anchor="middle">Plataforma sobre celda</text>
+        <rect x="8" y="88" width="76" height="104" fill="none" stroke="var(--bad)" stroke-dasharray="5 4"/><text class="t-sm" x="46" y="82" text-anchor="middle" style="fill:var(--bad)">Rechazo</text>
+        <rect x="255" y="36" width="30" height="30" rx="3" class="metal"/><text class="t-sm" x="270" y="30" text-anchor="middle">MG946R</text>
+        <circle cx="150" cy="284" r="6" fill="var(--ink)"/><text class="t-sm" x="164" y="305">Paleta de entrada</text>
+        <line id="pArm1" x1="150" y1="284" x2="150" y2="284" stroke="var(--dos)" stroke-width="5" stroke-linecap="round"/>
+        <circle id="pJar" cx="184" cy="259" r="38" fill="var(--glass)" fill-opacity=".3" stroke="var(--ink)" stroke-width="1.6"/>
+        <circle id="pJarC" cx="184" cy="259" r="28" fill="var(--coffee)" opacity=".85"/>
+        <line id="pArm2" x1="270" y1="51" x2="270" y2="51" stroke="var(--pes)" stroke-width="5" stroke-linecap="round"/>
+        <rect x="262" y="104" width="90" height="62" rx="4" fill="var(--panel)" stroke="var(--ink)"/>
+        <text id="pRead" x="307" y="132" text-anchor="middle" class="t-mono" font-size="19" font-weight="500">0,0 g</text>
+        <text id="pDec" x="307" y="154" text-anchor="middle" class="t-sm"> </text>
+        <rect x="262" y="174" width="90" height="8" fill="var(--line)"/><rect id="pStab" x="262" y="174" width="0" height="8" fill="var(--pes)"/>
+        <text class="t-sm" x="307" y="196" text-anchor="middle">estabilidad (5 lecturas)</text>
+      </svg>
+      <p class="cap">Límites del escenario ±1,5 % sobre 230 g de café: 226,55 a 233,45 g. La paleta del MG946R devuelve el frasco conforme a la faja o lo desvía al rechazo.</p>
+    </div>
+    <div class="card inset" id="insC">
+      <h3 style="color:var(--cer)">Cerrado de la tapa · vista superior</h3>
+      <svg viewBox="0 0 360 310" role="img" aria-label="Vista superior del cerrado: el servo gira una manivela, la placa empuja el carro con resortes y las ruedas motrices hacen girar la tapa contra las ruedas fijas.">
+        <circle cx="235" cy="150" r="70" fill="var(--cer)" fill-opacity=".14" stroke="var(--ink)" stroke-width="1.6"/>
+        <line id="capMark" x1="235" y1="150" x2="235" y2="90" stroke="var(--cer)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="235" cy="150" r="4" fill="var(--ink)"/>
+        <text class="t-sm" x="235" y="244" text-anchor="middle">Tapa Ø108,37</text>
+        <g id="fixedW"></g>
+        <g id="carro"><rect x="90" y="86" width="35" height="128" rx="3" class="metal"/><g id="mw"></g></g>
+        <text class="t-sm" x="106" y="232" text-anchor="middle">Carro</text>
+        <path id="spring" d="" stroke="var(--ink)" stroke-width="1.6" fill="none"/>
+        <g id="placa"><rect x="8" y="110" width="22" height="80" rx="2" fill="var(--panel)" stroke="var(--ink)"/></g>
+        <text class="t-sm" x="19" y="206" text-anchor="middle">Placa</text>
+        <rect x="6" y="240" width="52" height="46" rx="3" class="metal"/><circle cx="32" cy="263" r="3" fill="var(--ink)"/>
+        <line id="crankT" x1="32" y1="263" x2="32" y2="249" stroke="var(--cer)" stroke-width="4" stroke-linecap="round"/>
+        <text class="t-sm" x="32" y="302" text-anchor="middle">MG995</text>
+        <text class="t-sm" x="320" y="60" text-anchor="middle">Ruedas fijas</text>
+        <text class="t-sm" x="110" y="76" text-anchor="middle">Ruedas motrices</text>
+        <rect x="248" y="262" width="104" height="10" fill="var(--line)"/><rect id="curBar" x="248" y="262" width="0" height="10" fill="var(--cer)"/>
+        <line x1="317" y1="257" x2="317" y2="277" stroke="var(--ink)" stroke-width="1.5"/>
+        <text class="t-sm" x="300" y="254" text-anchor="middle">corriente (corte ≈ 2 A)</text>
+        <text id="curTxt" class="t-mono" x="300" y="296" text-anchor="middle" font-size="14">0,00 A</text>
+      </svg>
+      <p class="cap">Las cuatro ruedas tocan la tapa a ±23,9° del eje de empuje. El servo avanza el carro y los resortes fijan el apriete; la tapa gira 2 vueltas.</p>
+    </div>
+  </div>
+  <p class="foot">Esquema funcional con los datos de diseño de los informes, no una simulación física. La alimentación de la tapa y el sellado con banda termocontraíble están por diseñar: sus formas, temperaturas y tiempos son referenciales.</p>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var NS='http://www.w3.org/2000/svg';
+  function clamp(v,a,b){a=a===undefined?0:a;b=b===undefined?1:b;return Math.min(b,Math.max(a,v))}
+  function seg(u,a,b){return clamp((u-a)/(b-a))}
+  function ease(u){return u*u*(3-2*u)}
+  function lerp(a,b,t){return a+(b-a)*t}
+  function fm(v,d){return v.toFixed(d===undefined?1:d).replace('.',',')}
+  var RAD=Math.PI/180;
+
+  var PH=[
+   {id:'in',n:'Avance a dosificado',real:'faja',dur:3,c:'--ink',
+    d:'La faja arranca con una rampa de PWM de 1,5 s. El sensor S1_DOS está unos 30 mm antes del centro de la estación para que el frenado deje el frasco justo bajo la descarga. Toda la faja se detiene en cada estación.',
+    k:[['Rampa de PWM','1,5 s'],['Referencia','15 rpm = 39,27 mm/s'],['Parada','X = 275 mm'],['Sensor','S1_DOS (FC-51)']]},
+   {id:'dos',n:'Dosificado',real:'2,9 s',dur:4,c:'--dos',
+    d:'El sensor IR confirma el frasco. El MG995 gira el disco 180° en 1,5 s con rampas de 0,3 s: el contenedor lleno queda sobre el agujero de Ø80 mm y se vacía en 1,0 s, mientras el otro se llena bajo la tolva. El sentido de giro alterna cada ciclo (+180° y −180°). El INA219 detecta atascos por corriente y el HC-SR04 vigila el nivel de la tolva.',
+    k:[['Ciclo','2,9 s'],['Giro','1,5 s, rampas 0,3 s'],['Vaciado','1,0 s'],['Volumen','804,2 mL'],['Masa teórica','224,8 g'],['Sensores','IR · INA219 · HC-SR04']]},
+   {id:'av1',n:'Avance a pesaje',real:'faja',dur:3,c:'--ink',
+    d:'La faja lleva el frasco lleno a la zona de transferencia (X = 600 mm). S2_PES solo avisa la llegada; la medición no depende de la banda.',
+    k:[['Parada','X = 600 mm'],['Sensor','S2_PES (FC-51)']]},
+   {id:'pes',n:'Pesaje y rechazo',real:'≈ 1,5 s de lectura',dur:5,c:'--pes',
+    d:'La paleta de entrada pasa el frasco a la plataforma lateral sobre la celda YZC-131A. El HX711 digitaliza y el PIC18F57Q43 acepta la lectura cuando 5 valores seguidos quedan dentro de ±1 g. Resta la tara fija (441 g) y compara la masa neta con los límites. La paleta del MG946R devuelve el frasco conforme a la faja o lo envía al rechazo.',
+    k:[['Lectura estable','≈ 1,5 s'],['Criterio','5 lecturas ±1 g'],['Tara fija','441 g'],['Servo','MG946R, ≈ 0,6 s'],['Celda','YZC-131A, 5 kg']]},
+   {id:'av2',n:'Avance y colocación de tapa',real:'faja',dur:3,c:'--ink',pend:true,
+    d:'La tapa de polipropileno (rosca de 2 vueltas) debe quedar apoyada sobre el frasco antes del cerrado. El mecanismo que la alimenta todavía no está definido.',
+    k:[['Parada','X = 875 mm'],['Sensor','S3_TAP (FC-51)'],['Tapa','PP, Ø108,37'],['Alimentación','por definir']]},
+   {id:'cer',n:'Cerrado de la tapa',real:'8,6 s',dur:6,c:'--cer',
+    d:'La faja detiene el frasco y el sensor de presencia confirma 100 ms. El MG995 gira de 0° a 180° en 0,8 s y el yugo escocés empuja el carro 40 mm: la mordaza cóncava y la cuña en V sujetan el frasco y las cuatro ruedas tocan la tapa. Los dos motores a 12 V la giran 2 vueltas (720°, ≈ 6,3 s, hasta 9,4 s) mientras baja 12,4 mm. Al llegar a la corriente de corte (≈ 2 A) se apagan, el servo vuelve a 0° y se informa TAPADO_OK a la faja.',
+    k:[['Ciclo','8,6 s'],['Carro','0° → 180° en 0,8 s'],['Giro de tapa','720° (≈ 6,3 s)'],['Descenso','12,4 mm'],['Yugo escocés','manivela 20 mm, carrera 40 mm'],['Corte','≈ 2 A total'],['Motores','JGB37-520, 12 V']]},
+   {id:'av3',n:'Avance a sellado',real:'faja',dur:3,c:'--ink',
+    d:'La faja lleva el frasco cerrado a la reserva de sellado (X = 1150 mm), donde está S4_TER.',
+    k:[['Parada','X = 1150 mm'],['Sensor','S4_TER (FC-51)']]},
+   {id:'ter',n:'Banda termocontraíble',real:'por definir',dur:5,c:'--ter',pend:true,
+    d:'Secuencia propuesta: el sensor detecta el frasco y la faja se detiene; se coloca la banda sobre la tapa y parte del cuello; se aplica aire caliente controlado (opcionalmente girando el frasco) hasta que la película se contrae; se corta el calentamiento y la faja libera el frasco terminado.',
+    k:[['Perímetro de la tapa','≈ 340 mm'],['Ancho plano','> ≈ 170 mm'],['Ubicación','Reserva de sellado'],['Equipo y tiempos','por definir']]},
+   {id:'out',n:'Salida',real:'faja',dur:3,c:'--ink',
+    d:'La faja saca el frasco terminado. Un frasco con 230 g de café, tapa y banda pesa en conjunto unos 701 g.',
+    k:[['Frasco vacío','441 g'],['Tapa','30 g'],['Café','230 g'],['Total','701 g']]}
+  ];
+  var ROW={in:[-70,275,1],dos:[275,275,0],av1:[275,600,1],pes:[600,600,0],av2:[600,875,1],cer:[875,875,0],av3:[875,1150,1],ter:[1150,1150,0],out:[1150,1480,1]};
+  var phases=PH,starts=[],total=0,reject=false,t=0,playing=true,speed=1,jn=0,lastI=-1;
+  var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+
+  function build(){
+    phases=reject?PH.slice(0,4):PH;starts=[];total=0;
+    phases.forEach(function(p){starts.push(total);total+=p.dur});
+    var ol=$('steps');ol.innerHTML='';
+    phases.forEach(function(p,i){
+      var li=document.createElement('li'),b=document.createElement('button');b.type='button';
+      b.style.setProperty('--c','var('+p.c+')');
+      b.innerHTML='<span class="dot"></span><span class="nm">'+(i+1)+'. '+p.n+(p.pend?' *':'')+'</span><span class="rt">'+p.real+'</span>';
+      b.addEventListener('click',function(){t=starts[i]+0.001;render()});
+      li.appendChild(b);ol.appendChild(li);
+    });
+    lastI=-1;
+  }
+
+  function stateAt(tt){
+    var i=phases.length-1;
+    for(var k=0;k<phases.length;k++){if(tt<starts[k]+phases[k].dur){i=k;break}}
+    var p=phases[i],u=clamp((tt-starts[i])/p.dur),id=p.id,ord=phases.map(function(q){return q.id});
+    function past(n){var k=ord.indexOf(n);return k>=0&&k<i}
+    var r=ROW[id],x=r[2]?lerp(r[0],r[1],ease(u)):r[0];
+    var S={i:i,u:u,id:id,x:x,mov:!!r[2]};
+    S.belt=r[2]?(u<.25?'ACELERAR':(u<.75?'AVANZAR':'DESACELERAR')):'PROCESO';
+    S.rot=0;S.pour=0;
+    if(id==='dos'){S.rot=ease(seg(u,.12,.45));S.pour=seg(u,.45,.85)}
+    else if(past('dos')){S.rot=1;S.pour=1}
+    S.ir=(id==='dos'&&u>.02);
+    S.pjx=184;S.pjy=259;S.pread=0;S.pstab=0;S.pdec='';S.a1=150;S.th=90;S.back=0;S.rejp=0;
+    var reading=reject?221.3:230.4;
+    if(id==='pes'){
+      var a=seg(u,0,.2),b=seg(u,.2,.45),s=seg(u,.45,.65),dc=seg(u,.65,.75),rr=seg(u,.75,1);
+      S.a1=150-90*ease(a)+90*ease(seg(u,.2,.3));
+      S.pread=u<.2?0:reading*ease(b)+(1-s)*Math.sin(tt*37)*2.2*(b<1?3:1);
+      S.pstab=s;S.pdec=dc>0?(reject?'NO CONFORME':'CONFORME'):'';
+      S.th=90-45*ease(rr);
+      S.pjy=lerp(259,140,ease(a));
+      if(reject){S.pjx=lerp(184,46,ease(rr));S.pjy=140;S.rejp=ease(rr);S.back=1}
+      else if(rr>0){S.pjy=lerp(140,259,ease(rr));S.back=1-ease(rr)}
+      else{S.back=ease(a)}
+    }
+    S.capVis=0;S.capY=185;S.capRot=0;S.capDesc=0;
+    var ai=ord.indexOf('av2'),taken=(ai>=0&&(i>ai||(id==='av2'&&x>=735)));
+    if(taken){S.capVis=1;S.capY=lerp(185,190,seg(x,735,765))}
+    S.chuteCap=!taken;
+    S.adv=0;S.cur=0;S.crank=0;
+    if(id==='cer'){
+      var adv=ease(seg(u,.1,.2)),ret=ease(seg(u,.9,1)),ros=seg(u,.2,.8),spike=seg(u,.8,.86);
+      S.adv=adv*(1-ret);S.crank=S.adv;
+      S.capRot=ros*720;S.capDesc=ros;
+      S.cur=u<.2?0:(u<.8?.35+.35*ros:(u<.86?lerp(.7,2.05,spike):0));
+    }else if(past('cer')){S.capRot=720;S.capDesc=1}
+    S.sleeveY=-100;S.sk=-1;S.hot=0;
+    if(id==='ter'){
+      var dsc=ease(seg(u,.1,.35)),sh=ease(seg(u,.35,.8));
+      S.sleeveY=lerp(-100,0,dsc);S.sk=sh;S.hot=(u>.35&&u<.8)?1:0;
+      S.capRot=720+(u>.35&&u<.8?(u-.35)/.45*360:(u>=.8?360:0));
+      if(u<.1)S.sk=-1;
+    }else if(past('ter')){S.sleeveY=0;S.sk=1;S.capRot=1080}
+    return S;
+  }
+
+  var E={};
+  ['jar','jFill','cap','capTicks','sleeve','sleeveP','cA','cB','stream','beltDash','roll1','roll2','irBeam','spL','spR','crank','paddle','hot','capChute','fc1','fc2','fc3','fc4','stateTxt','jarTxt','wheelL','clampL','clampR','g-cer','g-pes','g-ter','g-dos'].forEach(function(k){E[k]=$(k)});
+  var ticks=[];
+  for(var q=0;q<7;q++){var l=document.createElementNS(NS,'line');l.setAttribute('y1','3');l.setAttribute('y2','21');E.capTicks.appendChild(l);ticks.push(l)}
+
+  var CX=235,CY=150,RW=20,TH=23.9*RAD,DW=70+RW;
+  function mkW(parent,cx,cy,fill){
+    var g=document.createElementNS(NS,'g');g.setAttribute('transform','translate('+cx+' '+cy+')');
+    g.innerHTML='<circle r="'+RW+'" fill="'+fill+'" fill-opacity=".3" stroke="var(--ink)" stroke-width="1.6"/><g class="sp" stroke="var(--ink)" stroke-width="2"><line x1="-'+RW+'" y1="0" x2="'+RW+'" y2="0"/><line x1="0" y1="-'+RW+'" x2="0" y2="'+RW+'"/></g>';
+    parent.appendChild(g);return g.querySelector('.sp');
+  }
+  var wx=DW*Math.cos(TH),wy=DW*Math.sin(TH);
+  var spins=[mkW($('fixedW'),CX+wx,CY-wy,'var(--metal)'),mkW($('fixedW'),CX+wx,CY+wy,'var(--metal)'),
+             mkW($('mw'),CX-wx,CY-wy,'var(--cer)'),mkW($('mw'),CX-wx,CY+wy,'var(--cer)')];
+
+  function spring(x1,x2,y){
+    var n=7,d='M'+x1.toFixed(1)+' '+y,w=(x2-x1)/n;
+    for(var k=0;k<n;k++){d+=' L'+(x1+w*(k+.5)).toFixed(1)+' '+(y+(k%2?-8:8))}
+    return d+' L'+x2.toFixed(1)+' '+y;
+  }
+
+  function setJar(S){
+    var X=S.x,s=1,ty=0,op=1;
+    if(S.id==='pes'){
+      if(reject){s=lerp(.92,.6,S.rejp);ty=lerp(0,138,S.rejp);X=lerp(600,815,S.rejp);op=lerp(.6,.85,S.rejp)}
+      else{s=1-.08*S.back;op=1-.4*S.back}
+    }
+    E.jar.setAttribute('transform','translate('+X.toFixed(2)+' '+(330+ty).toFixed(2)+') scale('+s.toFixed(3)+') translate(0 -330)');
+    E.jar.setAttribute('opacity',op.toFixed(2));
+    var fill=S.id==='in'?0:(S.id==='dos'?S.pour:1),h=70*fill;
+    E.jFill.setAttribute('y',(326-h).toFixed(1));E.jFill.setAttribute('height',h.toFixed(1));
+    E.cap.setAttribute('opacity',S.capVis);
+    E.cap.setAttribute('transform','translate(0 '+(S.capY+12.4*S.capDesc).toFixed(2)+')');
+    for(var k=0;k<ticks.length;k++){
+      var ang=S.capRot*RAD+k*0.9,xx=48*Math.sin(ang);
+      ticks[k].setAttribute('x1',xx.toFixed(1));ticks[k].setAttribute('x2',xx.toFixed(1));ticks[k].setAttribute('opacity',Math.cos(ang)>0?.9:0);
+    }
+    if(S.sk<0){E.sleeve.setAttribute('opacity',0)}
+    else{
+      var w=lerp(66,57,S.sk),wb=lerp(66,53,S.sk);
+      E.sleeveP.setAttribute('d','M'+(-w)+' 198H'+w+'V228L'+wb+' 247H'+(-wb)+'L'+(-w)+' 228Z');
+      E.sleeve.setAttribute('transform','translate(0 '+S.sleeveY.toFixed(1)+')');
+      E.sleeve.setAttribute('opacity',1);
+    }
+  }
+
+  var fcX=[245,570,845,1120],fcEl=[E.fc1,E.fc2,E.fc3,E.fc4];
+
+  function render(){
+    var S=stateAt(t);
+    setJar(S);
+    E.beltDash.setAttribute('stroke-dashoffset',(-(S.x%10)).toFixed(2));
+    var rot=S.x*1.15;
+    E.roll1.setAttribute('transform','rotate('+rot.toFixed(1)+' 27 357)');
+    E.roll2.setAttribute('transform','rotate('+rot.toFixed(1)+' 1373 357)');
+    var onBelt=!(S.id==='pes'&&(reject||S.back>.5));
+    for(var k=0;k<4;k++){fcEl[k].setAttribute('fill',(onBelt&&Math.abs(S.x-fcX[k])<56)?'var(--ok)':'var(--panel)')}
+    var par=jn%2,F=par?E.cB:E.cA,Em=par?E.cA:E.cB,ang=S.rot*Math.PI;
+    F.setAttribute('transform','translate('+(365+90*Math.cos(ang)).toFixed(1)+' 0)');
+    Em.setAttribute('transform','translate('+(365-90*Math.cos(ang)).toFixed(1)+' 0)');
+    var hh=158,fl=1-S.pour,el=S.pour,cf=F.querySelector('.cf'),ce=Em.querySelector('.cf');
+    cf.setAttribute('y',(13+hh*(1-fl)).toFixed(1));cf.setAttribute('height',(hh*fl).toFixed(1));
+    ce.setAttribute('y',(13+hh*(1-el)).toFixed(1));ce.setAttribute('height',(hh*el).toFixed(1));
+    E.stream.setAttribute('opacity',(S.id==='dos'&&S.pour>.03&&S.pour<.97)?.9:0);
+    E.irBeam.setAttribute('opacity',S.ir?1:0);
+    E.paddle.setAttribute('transform','rotate('+((90-S.th)*1.3).toFixed(1)+' 612 302)');
+    E.wheelL.setAttribute('transform','translate('+lerp(742,801,ease(clamp(S.adv/.7))).toFixed(1)+' 0)');
+    var sp=-S.capRot*2.7;
+    E.spL.setAttribute('transform','rotate('+sp.toFixed(1)+' 0 203)');
+    E.spR.setAttribute('transform','rotate('+sp.toFixed(1)+' 949 203)');
+    var cl=S.id==='cer'?clamp(S.adv*3)*.9:0;E.clampL.setAttribute('opacity',cl);E.clampR.setAttribute('opacity',cl);
+    var cr=S.crank*Math.PI;E.crank.setAttribute('x2',(1023+17*Math.sin(cr)).toFixed(1));E.crank.setAttribute('y2',(135-17*Math.cos(cr)).toFixed(1));
+    E.hot.setAttribute('opacity',S.hot?(0.55+0.4*Math.sin(t*14)):0);
+    E.capChute.setAttribute('opacity',S.chuteCap?1:0);
+    var stn={dos:1,pes:1,cer:1,ter:1};
+    [['g-dos','dos'],['g-pes','pes'],['g-cer','cer'],['g-ter','ter']].forEach(function(a){
+      E[a[0]].setAttribute('opacity',(S.id===a[1]||!stn[S.id])?1:.5);
+    });
+    E.stateTxt.textContent='Frasco n.º '+(jn+1)+' · Faja: '+S.belt+(S.id==='ter'?' · estación propuesta':'');
+    $('insP').style.opacity=(S.id==='pes'||S.id==='av1')?1:.5;
+    $('insC').style.opacity=(S.id==='cer'||S.id==='av2')?1:.5;
+    $('pJar').setAttribute('cx',S.pjx.toFixed(1));$('pJar').setAttribute('cy',S.pjy.toFixed(1));
+    $('pJarC').setAttribute('cx',S.pjx.toFixed(1));$('pJarC').setAttribute('cy',S.pjy.toFixed(1));
+    var a1=S.a1*RAD;
+    $('pArm1').setAttribute('x2',(150+95*Math.cos(a1)).toFixed(1));$('pArm1').setAttribute('y2',(284-95*Math.sin(a1)).toFixed(1));
+    var tp=S.th*RAD;
+    $('pArm2').setAttribute('x2',(270-110*Math.sin(tp)).toFixed(1));$('pArm2').setAttribute('y2',(51+110*Math.cos(tp)).toFixed(1));
+    $('pRead').textContent=fm(S.id==='pes'?Math.max(0,S.pread):0)+' g';
+    var dec=$('pDec');dec.textContent=S.pdec||' ';dec.style.fill=S.pdec?(S.pdec==='CONFORME'?'var(--ok)':'var(--bad)'):'';
+    $('pStab').setAttribute('width',(90*S.pstab).toFixed(1));
+    var co=-40*(1-clamp(S.adv/.7)),po=48*S.adv;
+    $('carro').setAttribute('transform','translate('+co.toFixed(1)+' 0)');
+    $('placa').setAttribute('transform','translate('+po.toFixed(1)+' 0)');
+    $('spring').setAttribute('d',spring(30+po,90+co,150));
+    var cm=S.capRot*RAD;
+    $('capMark').setAttribute('x2',(CX+60*Math.sin(cm)).toFixed(1));$('capMark').setAttribute('y2',(CY-60*Math.cos(cm)).toFixed(1));
+    spins.forEach(function(s){s.setAttribute('transform','rotate('+sp.toFixed(1)+')')});
+    $('crankT').setAttribute('x2',(32+14*Math.sin(cr)).toFixed(1));$('crankT').setAttribute('y2',(263-14*Math.cos(cr)).toFixed(1));
+    $('curBar').setAttribute('width',(104*clamp(S.cur/3)).toFixed(1));
+    $('curBar').setAttribute('fill',S.cur>=1.99?'var(--bad)':'var(--cer)');
+    $('curTxt').textContent=fm(S.cur,2)+' A';
+    if(S.i!==lastI){
+      lastI=S.i;var p=phases[S.i],bs=$('steps').querySelectorAll('button');
+      for(var j=0;j<bs.length;j++){
+        if(j===S.i)bs[j].setAttribute('aria-current','step');else bs[j].removeAttribute('aria-current');
+        bs[j].className=j<S.i?'done':'';
+      }
+      $('pTitle').textContent=(S.i+1)+'. '+p.n;$('pReal').textContent=p.real;$('pPend').hidden=!p.pend;
+      $('pDesc').textContent=p.d;
+      $('data').innerHTML=p.k.map(function(z){return '<div><dt>'+z[0]+'</dt><dd>'+z[1]+'</dd></div>'}).join('');
+    }
+    $('scrub').value=Math.round(t/total*1000);
+    $('tm').textContent=fm(t)+' s';
+  }
+
+  var lastTs=0;
+  function loop(ts){
+    if(!lastTs)lastTs=ts;
+    var dt=Math.min(.1,(ts-lastTs)/1000);lastTs=ts;
+    if(playing){t+=dt*speed;if(t>=total){t=0;jn++}render()}
+    requestAnimationFrame(loop);
+  }
+  function setPlay(v){playing=v;$('play').textContent=v?'Pausar':'Reproducir'}
+  $('play').addEventListener('click',function(){setPlay(!playing)});
+  $('reset').addEventListener('click',function(){t=0;jn=0;render()});
+  $('next').addEventListener('click',function(){var n=0;for(var k=0;k<starts.length;k++){if(starts[k]<=t)n=k}t=(n+1<starts.length?starts[n+1]:0)+.001;render()});
+  $('prev').addEventListener('click',function(){var n=0;for(var k=0;k<starts.length;k++){if(starts[k]<=t-.5)n=k}t=starts[n]+.001;render()});
+  $('spd').addEventListener('change',function(e){speed=parseFloat(e.target.value)});
+  $('scrub').addEventListener('input',function(e){t=parseInt(e.target.value,10)/1000*total;render()});
+  $('lbl').addEventListener('change',function(e){var m=$('main');if(e.target.checked)m.classList.remove('nolbl');else m.classList.add('nolbl')});
+  $('rej').addEventListener('change',function(e){reject=e.target.checked;build();t=starts[3]+.001;render()});
+
+  build();
+  if(reduce){setPlay(false);t=starts[1]+.55*phases[1].dur}
+  render();
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body></html>
