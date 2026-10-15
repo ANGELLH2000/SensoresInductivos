@@ -1,0 +1,673 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Línea de Envasado de Café</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: panel de control industrial — escena SVG de la línea a la izquierda, ficha de la estación a la derecha, etapas debajo */
+:root{
+  --bg:#eceff1; --surface:#fbfcfc; --surface-2:#f2f5f6; --ink:#141d24; --muted:#5a6873; --line:#d3dade;
+  --steel:#a9b5be; --steel-l:#c9d2d8; --steel-d:#6c7a85; --frame:#3b4650; --belt:#252c33; --belt-mark:#56616b;
+  --accent:#0a7d74; --accent-soft:rgba(10,125,116,.12);
+  --coffee:#4a2c19; --bean:#7b4a2b; --bean-hi:#a06a43;
+  --glass:rgba(178,214,230,.45); --glass-edge:#7fa6b8; --film:rgba(120,180,215,.55); --film-edge:#5f97b8;
+  --heat:#ff6a1f; --screen:#0f1d17; --screen-ink:#56f0a6;
+  --ok:#1d8a4e; --adv:#c27d0e; --none:#9aa6af; --label-bg:#ffffff; --lid:#b23a2a; --lid-d:#7e2519;
+  --f-display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1215; --surface:#141b20; --surface-2:#192228; --ink:#e2e9ed; --muted:#93a3ae; --line:#26323a;
+  --steel:#5d6b76; --steel-l:#76848e; --steel-d:#3e4a53; --frame:#85939d; --belt:#07090b; --belt-mark:#3a444c;
+  --accent:#3cc5b7; --accent-soft:rgba(60,197,183,.14);
+  --coffee:#3a2213; --bean:#8a5532; --bean-hi:#b47a4f;
+  --glass:rgba(150,200,225,.18); --glass-edge:#5f8aa0; --film:rgba(120,180,215,.40); --film-edge:#7fb4d4;
+  --heat:#ff7a33; --screen:#04100a; --screen-ink:#5cf5ad;
+  --ok:#3fbf78; --adv:#e3a23a; --none:#62707a; --label-bg:#1b252c; --lid:#c9493a; --lid-d:#8c2f22;
+  color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0d1215; --surface:#141b20; --surface-2:#192228; --ink:#e2e9ed; --muted:#93a3ae; --line:#26323a;
+  --steel:#5d6b76; --steel-l:#76848e; --steel-d:#3e4a53; --frame:#85939d; --belt:#07090b; --belt-mark:#3a444c;
+  --accent:#3cc5b7; --accent-soft:rgba(60,197,183,.14);
+  --coffee:#3a2213; --bean:#8a5532; --bean-hi:#b47a4f;
+  --glass:rgba(150,200,225,.18); --glass-edge:#5f8aa0; --film:rgba(120,180,215,.40); --film-edge:#7fb4d4;
+  --heat:#ff7a33; --screen:#04100a; --screen-ink:#5cf5ad;
+  --ok:#3fbf78; --adv:#e3a23a; --none:#62707a; --label-bg:#1b252c; --lid:#c9493a; --lid-d:#8c2f22;
+  color-scheme:dark; }
+
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-display);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 32px}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:16px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{margin:2px 0 0;font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.hud{display:flex;flex-wrap:wrap;gap:8px}
+.hud-item{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;min-width:0}
+.hud-item .k{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hud-item .v{font-family:var(--f-mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hud-item.phase .v{color:var(--accent)}
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:minmax(0,1fr)}}
+
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0;overflow:hidden}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.toolbar .hint{font-size:13px;color:var(--muted)}
+.ctrls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.chip:focus-visible,.mod:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:5px 10px;font-family:var(--f-mono);font-size:12px;font-weight:600}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.scene-scroll{overflow-x:auto}
+svg.scene{display:block;width:100%;min-width:640px;height:auto}
+
+/* SVG paint */
+.s-steel{fill:var(--steel)} .s-steel-l{fill:var(--steel-l)} .s-steel-d{fill:var(--steel-d)} .s-frame{fill:var(--frame)}
+.s-belt{fill:var(--belt)} .s-coffee{fill:var(--coffee)} .s-bean{fill:var(--bean)} .s-bean-hi{stroke:var(--bean-hi)}
+.s-glass{fill:var(--glass);stroke:var(--glass-edge);stroke-width:1.2}
+.s-lid{fill:var(--lid)} .s-lid-d{stroke:var(--lid-d)}
+.s-screen{fill:var(--screen)} .s-screen-ink{fill:var(--screen-ink);font-family:var(--f-mono)}
+.s-floor{stroke:var(--line);stroke-width:2}
+.s-ink{fill:var(--ink)} .s-muted{fill:var(--muted)}
+.s-film{fill:var(--film);stroke:var(--film-edge);stroke-width:1}
+.s-heat{fill:var(--heat)}
+.s-label-bg{fill:var(--label-bg);stroke:var(--line)}
+.lbl text{font-family:var(--f-display);font-size:13px;font-weight:700;fill:var(--ink)}
+.lbl .num{font-family:var(--f-mono);font-weight:500;fill:var(--muted);font-size:11.5px}
+.mod{cursor:pointer;outline:none}
+.mod.hover .s-label-bg,.mod.sel .s-label-bg{stroke:var(--accent);stroke-width:1.5}
+.mod.active .s-label-bg{fill:var(--accent-soft)}
+.hit{fill:transparent}
+.sel-box{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-dasharray:6 5;pointer-events:none;transition:all .25s ease}
+.hover-box{fill:var(--accent-soft);stroke:none;pointer-events:none}
+.dot-none{fill:var(--none)} .dot-adv{fill:var(--adv)} .dot-done{fill:var(--ok)}
+.active-ring{fill:none;stroke:var(--accent);stroke-width:2;opacity:.9}
+
+/* Panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px;min-width:0}
+.panel .num{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.08em}
+.panel h2{margin:0;font-size:22px;font-weight:800;line-height:1.15;text-wrap:balance}
+.live{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);width:fit-content}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--none)}
+.live.on{color:var(--accent);border-color:var(--accent)}
+.live.on i{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+.panel p{margin:0;color:var(--ink);font-size:14.5px}
+.panel ul{margin:0;padding-left:18px;color:var(--muted);font-size:13.5px;display:grid;gap:3px}
+.checks{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.checks .k{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.check{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;cursor:pointer;background:var(--surface-2)}
+.check:hover{border-color:var(--accent)}
+.check input{width:18px;height:18px;margin:0;accent-color:var(--accent);cursor:pointer}
+.check .t{font-weight:700;font-size:14.5px}
+.check .d{font-size:12.5px;color:var(--muted)}
+.check.adv:has(input:checked){border-color:var(--adv)}
+.check.done:has(input:checked){border-color:var(--ok)}
+.status-line{font-size:13px;color:var(--muted)}
+.status-line b{font-weight:700}
+.st-none{color:var(--muted)} .st-adv{color:var(--adv)} .st-done{color:var(--ok)}
+
+/* Etapas */
+.stages{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:12px}
+.stages-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.stages-head h3{margin:0;font-size:15px;font-weight:700}
+.progress-txt{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.bar span{height:6px;border-radius:3px;background:var(--line)}
+.bar span.adv{background:var(--adv)} .bar span.done{background:var(--ok)}
+.chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:420px){.chips{grid-template-columns:minmax(0,1fr)}}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:9px 11px;text-align:left;display:grid;gap:2px;min-width:0;position:relative}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-current="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.chip .n{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.chip .nm{font-weight:700;font-size:13.5px;line-height:1.25}
+.chip .st{font-size:12px;display:flex;align-items:center;gap:6px}
+.chip .st i{width:8px;height:8px;border-radius:50%;background:var(--none)}
+.chip .st.adv i{background:var(--adv)} .chip .st.done i{background:var(--ok)}
+.chip.running::after{content:"";position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite}
+.reset{font-size:12px;border:0;background:none;color:var(--muted);text-decoration:underline;padding:0}
+@media (prefers-reduced-motion: reduce){.live.on i,.chip.running::after{animation:none}.sel-box{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Simulación · envase de 250 g · operación automática</div>
+      <h1>Línea de envasado de café en grano</h1>
+    </div>
+    <div class="hud" aria-live="polite">
+      <div class="hud-item phase"><div class="k">Fase actual</div><div class="v" id="hudPhase">—</div></div>
+      <div class="hud-item"><div class="k">Envases terminados</div><div class="v" id="hudCount">0</div></div>
+      <div class="hud-item"><div class="k">Ritmo</div><div class="v" id="hudRate">3.4 env/min</div></div>
+    </div>
+  </header>
+
+  <div class="main">
+    <section class="stage" aria-label="Animación de la línea">
+      <div class="toolbar">
+        <span class="hint">Haz clic en cualquier módulo para ver su ficha y marcar su avance.</span>
+        <div class="ctrls">
+          <button class="btn" id="playBtn" type="button" aria-pressed="true">❚❚ Pausar</button>
+          <div class="seg" role="group" aria-label="Velocidad">
+            <button type="button" data-speed="0.5" aria-pressed="false">0.5×</button>
+            <button type="button" data-speed="1" aria-pressed="true">1×</button>
+            <button type="button" data-speed="2" aria-pressed="false">2×</button>
+          </div>
+        </div>
+      </div>
+      <div class="scene-scroll">
+      <svg class="scene" id="scene" viewBox="0 0 1000 475" role="img" aria-label="Línea automatizada: tolva, faja, pesaje, tapado y sellado termocontraíble">
+        <defs>
+          <pattern id="beans" width="11" height="8" patternUnits="userSpaceOnUse">
+            <rect width="11" height="8" class="s-coffee"/>
+            <ellipse cx="3" cy="2.6" rx="2.7" ry="1.9" class="s-bean" transform="rotate(-20 3 2.6)"/>
+            <path d="M1.2 3.3 Q3 2.4 4.8 2" class="s-bean-hi" stroke-width=".6" fill="none"/>
+            <ellipse cx="8.4" cy="6" rx="2.6" ry="1.8" class="s-bean" transform="rotate(25 8.4 6)"/>
+            <path d="M6.7 5.4 Q8.4 6.1 10.1 6.8" class="s-bean-hi" stroke-width=".6" fill="none"/>
+          </pattern>
+          <clipPath id="hopperClip"><path d="M82 42 L258 42 L188 150 L188 182 L152 182 L152 150 Z"/></clipPath>
+          <clipPath id="jarClip"><path d="M-26.5 -76 Q-26.5 -79 -23 -81 L-18.5 -83 L-18.5 -89 L18.5 -89 L18.5 -83 L23 -81 Q26.5 -79 26.5 -76 L26.5 -6 Q26.5 -1.5 21.5 -1.5 L-21.5 -1.5 Q-26.5 -1.5 -26.5 -6 Z"/></clipPath>
+          <clipPath id="lidClip"><rect x="-23" y="-12" width="46" height="12" rx="3"/></clipPath>
+          <clipPath id="chuckClip"><rect x="-27" y="0" width="54" height="20" rx="4"/></clipPath>
+          <radialGradient id="heatGlow" cx="50%" cy="60%" r="60%">
+            <stop offset="0" stop-color="var(--heat)" stop-opacity=".55"/>
+            <stop offset="1" stop-color="var(--heat)" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <line x1="0" y1="402" x2="1000" y2="402" class="s-floor"/>
+
+        <!-- 04 Tapado: estructura posterior -->
+        <g class="mod" data-mod="capper">
+          <rect class="hit" x="512" y="74" width="292" height="176"/>
+          <rect x="524" y="96" width="12" height="234" class="s-steel"/>
+          <rect x="694" y="96" width="12" height="234" class="s-steel"/>
+          <rect x="516" y="80" width="198" height="18" rx="3" class="s-frame"/>
+        </g>
+
+        <!-- 01 Tolva -->
+        <g class="mod" data-mod="hopper">
+          <rect class="hit" x="66" y="2" width="208" height="196"/>
+          <path d="M170 4 L170 24 Q170 32 178 32 L230 32" fill="none" stroke="var(--steel-d)" stroke-width="12"/>
+          <rect x="226" y="22" width="10" height="20" class="s-steel-d"/>
+          <g clip-path="url(#hopperClip)">
+            <rect id="hopperBeans" x="80" y="70" width="190" height="120" fill="url(#beans)"/>
+          </g>
+          <path d="M80 40 L260 40 L190 150 L190 184 L150 184 L150 150 Z" fill="var(--glass)" stroke="var(--frame)" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M80 40 L260 40" stroke="var(--frame)" stroke-width="6"/>
+          <rect x="146" y="184" width="48" height="6" rx="2" class="s-frame"/>
+          <rect id="gate" x="150" y="186" width="40" height="6" rx="1.5" class="s-steel-d"/>
+          <rect x="196" y="180" width="22" height="14" rx="3" class="s-steel"/>
+          <circle cx="207" cy="187" r="3" fill="var(--accent)"/>
+          <g id="inflow"></g>
+        </g>
+
+        <!-- 05 Sellado: parte posterior del túnel -->
+        <g class="mod" data-mod="shrink">
+          <rect class="hit" x="804" y="30" width="138" height="300"/>
+          <rect x="806" y="196" width="128" height="134" class="s-steel-d" opacity=".35"/>
+          <rect x="806" y="196" width="128" height="134" fill="url(#heatGlow)" id="heatGlowRect" opacity="0"/>
+          <rect x="812" y="210" width="9" height="110" rx="3" class="s-steel"/>
+          <rect x="919" y="210" width="9" height="110" rx="3" class="s-steel"/>
+          <rect x="812" y="210" width="9" height="110" rx="3" class="s-heat heater" opacity="0"/>
+          <rect x="919" y="210" width="9" height="110" rx="3" class="s-heat heater" opacity="0"/>
+        </g>
+
+        <!-- 02 Faja transportadora -->
+        <g class="mod" data-mod="conveyor">
+          <rect class="hit" x="22" y="318" width="956" height="84"/>
+          <g class="s-frame">
+            <rect x="66" y="352" width="8" height="48"/><rect x="286" y="352" width="8" height="48"/>
+            <rect x="496" y="352" width="8" height="48"/><rect x="716" y="352" width="8" height="48"/>
+            <rect x="926" y="352" width="8" height="48"/>
+            <rect x="58" y="396" width="24" height="5" rx="1"/><rect x="278" y="396" width="24" height="5" rx="1"/>
+            <rect x="488" y="396" width="24" height="5" rx="1"/><rect x="708" y="396" width="24" height="5" rx="1"/>
+            <rect x="918" y="396" width="24" height="5" rx="1"/>
+          </g>
+          <rect x="30" y="330" width="940" height="22" rx="11" class="s-belt"/>
+          <line id="beltTop" x1="40" y1="332.5" x2="960" y2="332.5" stroke="var(--belt-mark)" stroke-width="3" stroke-dasharray="6 14"/>
+          <line id="beltBot" x1="40" y1="349.5" x2="960" y2="349.5" stroke="var(--belt-mark)" stroke-width="2" stroke-dasharray="6 14"/>
+          <g id="rollers"></g>
+          <rect x="880" y="360" width="44" height="26" rx="4" class="s-steel-d"/>
+          <rect x="884" y="364" width="6" height="18" rx="1" class="s-steel"/>
+          <rect x="893" y="364" width="6" height="18" rx="1" class="s-steel"/>
+          <rect x="902" y="364" width="6" height="18" rx="1" class="s-steel"/>
+          <path d="M924 368 L959 344" stroke="var(--steel-d)" stroke-width="3"/>
+        </g>
+
+        <!-- 03 Pesaje -->
+        <g class="mod" data-mod="scale">
+          <rect class="hit" x="340" y="354" width="104" height="44"/>
+          <rect class="hit" x="428" y="206" width="84" height="124"/>
+          <rect id="scalePlate" x="344" y="354" width="92" height="6" rx="2" class="s-steel"/>
+          <rect x="374" y="362" width="32" height="20" rx="2" class="s-steel-l" stroke="var(--steel-d)"/>
+          <circle cx="384" cy="372" r="4" class="s-steel-d"/>
+          <circle cx="396" cy="372" r="4" class="s-steel-d"/>
+          <rect x="350" y="384" width="80" height="10" rx="2" class="s-frame"/>
+          <path d="M406 372 L466 372 L466 330" fill="none" stroke="var(--steel-d)" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <rect x="465" y="262" width="5" height="68" class="s-steel-d"/>
+          <rect x="430" y="210" width="78" height="54" rx="7" class="s-frame"/>
+          <rect x="436" y="216" width="66" height="26" rx="3" class="s-screen"/>
+          <text id="scaleTxt" x="498" y="234" text-anchor="end" font-size="13" font-weight="600" class="s-screen-ink">0.0 g</text>
+          <text x="440" y="224" font-size="5.5" class="s-screen-ink" opacity=".7">NETO</text>
+          <circle id="scaleLed" cx="442" cy="253" r="3.5" fill="var(--none)"/>
+          <text x="450" y="256" font-size="7" font-family="var(--f-mono)" fill="var(--steel-l)">250 ±2 g</text>
+        </g>
+
+        <!-- Envase -->
+        <g id="jar" pointer-events="none">
+          <path d="M-28 -76 Q-28 -80 -24 -82 L-20 -84 L-20 -90 L20 -90 L20 -84 L24 -82 Q28 -80 28 -76 L28 -6 Q28 0 22 0 L-22 0 Q-28 0 -28 -6 Z" class="s-glass"/>
+          <g clip-path="url(#jarClip)"><rect id="jarCoffee" x="-30" y="-4" width="60" height="4" fill="url(#beans)"/></g>
+          <rect x="-28" y="-50" width="56" height="22" fill="var(--label-bg)" opacity=".92"/>
+          <text x="0" y="-40.5" text-anchor="middle" font-size="7" font-weight="800" class="s-ink" font-family="var(--f-display)" letter-spacing=".08em">CAFÉ EN GRANO</text>
+          <text x="0" y="-31.5" text-anchor="middle" font-size="6.5" class="s-muted" font-family="var(--f-mono)">250 g</text>
+          <line x1="-21" y1="-72" x2="-21" y2="-56" stroke="#ffffff" stroke-opacity=".55" stroke-width="2.5" stroke-linecap="round"/>
+          <g id="jarLid" transform="translate(0,-88)">
+            <rect x="-23" y="-12" width="46" height="12" rx="3" class="s-lid"/>
+            <g clip-path="url(#lidClip)"><g class="ridges"></g></g>
+          </g>
+          <g id="sleeveG">
+            <path id="sleeve" class="s-film"/>
+            <g id="wrinkles" stroke="var(--film-edge)" stroke-width=".8" fill="none"></g>
+            <line id="sleeveShine" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0"/>
+          </g>
+        </g>
+
+        <!-- 04 Tapado: piezas frontales -->
+        <g class="mod" data-mod="capper">
+          <rect x="597" y="98" width="36" height="46" rx="4" class="s-steel"/>
+          <rect x="601" y="104" width="28" height="4" class="s-steel-d"/>
+          <rect id="capRod" x="611" y="144" width="8" height="21" class="s-steel-l"/>
+          <g id="chuck" transform="translate(615,165)">
+            <rect x="-27" y="0" width="54" height="20" rx="4" class="s-steel-d"/>
+            <g clip-path="url(#chuckClip)"><g class="ridges-chuck"></g></g>
+            <rect x="-24" y="18" width="48" height="4" rx="2" class="s-frame"/>
+          </g>
+          <!-- cargador de tapas -->
+          <rect x="717" y="148" width="4" height="82" class="s-steel-d"/>
+          <rect x="769" y="148" width="4" height="82" class="s-steel-d"/>
+          <g transform="translate(745,228)">
+            <rect x="-23" y="-12" width="46" height="12" rx="3" class="s-lid" opacity=".95"/>
+            <rect x="-23" y="-25" width="46" height="12" rx="3" class="s-lid" opacity=".9"/>
+            <rect x="-23" y="-38" width="46" height="12" rx="3" class="s-lid" opacity=".85"/>
+            <rect x="-23" y="-51" width="46" height="12" rx="3" class="s-lid" opacity=".8"/>
+          </g>
+          <rect x="640" y="242" width="134" height="3" class="s-steel-d"/>
+          <rect id="pusherRod" x="768" y="234" width="8" height="4" class="s-steel-l"/>
+          <rect id="pusher" x="768" y="229" width="4" height="13" rx="1" class="s-frame"/>
+          <rect x="776" y="230" width="26" height="12" rx="3" class="s-steel"/>
+          <g id="lidFree" transform="translate(745,242)">
+            <rect x="-23" y="-12" width="46" height="12" rx="3" class="s-lid"/>
+            <g clip-path="url(#lidClip)"><g class="ridges"></g></g>
+          </g>
+        </g>
+
+        <!-- Granos cayendo -->
+        <g id="particles" pointer-events="none"></g>
+
+        <!-- 05 Sellado: aplicador y frente del túnel -->
+        <g class="mod" data-mod="shrink">
+          <rect x="866" y="30" width="8" height="40" class="s-steel-d"/>
+          <circle cx="870" cy="62" r="25" fill="var(--film)" stroke="var(--film-edge)" stroke-width="1.5"/>
+          <circle cx="870" cy="62" r="9" class="s-steel"/>
+          <g id="rollSpokes" stroke="var(--steel-d)" stroke-width="2"><line x1="870" y1="54" x2="870" y2="70"/><line x1="862" y1="62" x2="878" y2="62"/></g>
+          <path d="M852 86 L888 86 L907 124 L833 124 Z" class="s-steel-l" stroke="var(--steel-d)"/>
+          <path d="M858 66 L852 86 M882 66 L888 86" stroke="var(--film-edge)" stroke-width="1.2"/>
+          <path d="M828 126 L840 126 L834 132 Z M912 126 L900 126 L906 132 Z" class="s-frame"/>
+          <path id="waitSleeve" class="s-film"/>
+          <rect x="802" y="188" width="28" height="10" rx="2" class="s-frame"/>
+          <rect x="910" y="188" width="28" height="10" rx="2" class="s-frame"/>
+          <rect x="804" y="198" width="132" height="132" fill="var(--glass)" opacity=".35" stroke="var(--frame)" stroke-width="3"/>
+          <g id="waves" stroke="var(--heat)" stroke-width="1.6" fill="none" opacity="0" stroke-linecap="round"></g>
+          <rect x="804" y="198" width="132" height="10" class="s-frame" opacity=".85"/>
+          <rect x="828" y="196" width="84" height="12" class="s-steel-d" opacity=".9"/>
+          <rect x="840" y="198" width="60" height="6" fill="var(--bg)" opacity=".6"/>
+          <circle id="tunnelLed" cx="924" cy="203" r="3" fill="var(--none)"/>
+        </g>
+
+        <!-- Etiquetas -->
+        <g id="labels"></g>
+        <rect id="hoverBox" class="hover-box" rx="10" opacity="0"/>
+        <rect id="selBox" class="sel-box" rx="10"/>
+      </svg>
+      </div>
+    </section>
+
+    <aside class="panel" aria-live="polite">
+      <div>
+        <div class="num" id="pNum">ETAPA 01 / 05</div>
+        <h2 id="pName">Tolva de llenado</h2>
+      </div>
+      <span class="live" id="pLive"><i></i><span>En espera</span></span>
+      <p id="pDesc"></p>
+      <ul id="pPoints"></ul>
+      <div class="checks">
+        <div class="k">Avance de esta etapa</div>
+        <label class="check adv" for="chkAdv">
+          <input type="checkbox" id="chkAdv">
+          <span><span class="t">Avanzado</span><br><span class="d">Hay trabajo en curso en esta etapa</span></span>
+        </label>
+        <label class="check done" for="chkDone">
+          <input type="checkbox" id="chkDone">
+          <span><span class="t">Completado</span><br><span class="d">La etapa está terminada y verificada</span></span>
+        </label>
+        <div class="status-line">Estado: <b id="pStatus" class="st-none">Pendiente</b></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="stages" aria-label="Etapas del sistema">
+    <div class="stages-head">
+      <h3>Etapas del proceso</h3>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <span class="progress-txt" id="progTxt">0 de 5 completadas</span>
+        <button class="reset" id="resetBtn" type="button">Reiniciar avance</button>
+      </div>
+    </div>
+    <div class="bar" id="bar"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="chips" id="chips"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+const NS="http://www.w3.org/2000/svg";
+const $=id=>document.getElementById(id);
+const mk=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;};
+
+const MODS=[
+ {id:"hopper",n:"01",name:"Tolva de llenado",lx:170,ly:428,box:[64,2,212,198],
+  desc:"Almacena el café en grano y lo dosifica por gravedad. Cuando el envase llega debajo, la compuerta inferior se abre, deja caer el grano y se cierra al completar la dosis.",
+  pts:["Ingreso de grano por el ducto superior","Compuerta de descarga accionada automáticamente","Sensor de presencia de envase","Dosis objetivo: 250 g"]},
+ {id:"conveyor",n:"02",name:"Faja transportadora",lx:500,ly:458,box:[22,318,956,90],
+  desc:"Cinta que desplaza cada envase de una estación a la siguiente. Avanza por pasos y se detiene mientras cada estación trabaja.",
+  pts:["Motor de accionamiento en el extremo de salida","Rodillos motriz y de retorno","Avance indexado y sincronizado con las estaciones"]},
+ {id:"scale",n:"03",name:"Estación de pesaje",lx:390,ly:428,box:[338,204,176,196],
+  desc:"Plataforma apoyada sobre una celda de carga. Mide el peso neto del envase lleno y lo compara con la dosis objetivo antes de liberarlo.",
+  pts:["Celda de carga bajo la plataforma","Indicador digital con lectura neta en gramos","Luz verde cuando el peso está en tolerancia"]},
+ {id:"capper",n:"04",name:"Estación de tapado",lx:618,ly:428,box:[512,74,292,180],
+  desc:"Un empujador desliza la tapa desde el cargador hasta la boca del envase. Después, el cabezal baja, presiona y enrosca la tapa para cerrarla.",
+  pts:["Cargador vertical de tapas","Empujador lineal que posiciona la tapa","Cabezal que presiona y gira (enroscado)"]},
+ {id:"shrink",n:"05",name:"Sellado termocontraíble",lx:870,ly:428,box:[800,30,142,302],
+  desc:"Forma una manga de plástico termocontraíble, la deja caer sobre el envase y la ajusta con calor dentro del túnel hasta que queda pegada a la tapa y al cuerpo.",
+  pts:["Bobina de film y mandril formador","Corte de la manga a medida","Túnel de calor con resistencias laterales"]},
+];
+const MOD=Object.fromEntries(MODS.map(m=>[m.id,m]));
+
+/* ---------- Estado de avance (por navegador) ---------- */
+const KEY="linea-cafe-avance-v1";
+let progress={};
+try{progress=JSON.parse(localStorage.getItem(KEY)||"{}")||{};}catch(e){progress={};}
+MODS.forEach(m=>{if(!progress[m.id])progress[m.id]={adv:false,done:false};});
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(progress));}catch(e){}};
+const stOf=id=>progress[id].done?"done":progress[id].adv?"adv":"none";
+const stTxt={none:"Pendiente",adv:"Avanzado",done:"Completado"};
+
+/* ---------- Etiquetas SVG ---------- */
+const labelsG=$("labels");
+const dots={};
+MODS.forEach(m=>{
+  const g=mk("g",{class:"mod lbl","data-mod":m.id},labelsG);
+  const bg=mk("rect",{class:"s-label-bg",rx:13,height:26,y:m.ly-17},g);
+  const dot=mk("circle",{r:4.5,cy:m.ly-4},g);
+  const num=mk("text",{class:"num",y:m.ly},g);num.textContent=m.n;
+  const t=mk("text",{y:m.ly},g);t.textContent=m.name;
+  dots[m.id]=dot; m._l={bg,dot,num,t};
+});
+function layoutLabels(){MODS.forEach(m=>{const {bg,dot,num,t}=m._l;
+  let nw=16,tw=m.name.length*7;try{nw=num.getComputedTextLength();tw=t.getComputedTextLength();}catch(e){}
+  const W=21+6+nw+6+tw+12, x0=m.lx-W/2;
+  bg.setAttribute("x",x0);bg.setAttribute("width",W);
+  dot.setAttribute("cx",x0+16);num.setAttribute("x",x0+27);t.setAttribute("x",x0+27+nw+6);});}
+layoutLabels();
+try{document.fonts&&document.fonts.ready.then(layoutLabels);}catch(e){}
+
+/* ---------- Interacción: selección ---------- */
+let selected="hopper", activeMod=null;
+const allModEls=()=>document.querySelectorAll(".mod");
+function setBox(el,b,pad){el.setAttribute("x",b[0]-pad);el.setAttribute("y",b[1]-pad);el.setAttribute("width",b[2]+pad*2);el.setAttribute("height",b[3]+pad*2);}
+document.querySelectorAll(".mod").forEach(el=>{
+  const id=el.dataset.mod;
+  if(el.classList.contains("lbl")){el.setAttribute("tabindex","0");el.setAttribute("role","button");el.setAttribute("aria-label","Seleccionar "+MOD[id].name);}
+  el.addEventListener("click",()=>select(id));
+  el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(id);}});
+  el.addEventListener("mouseenter",()=>hover(id));
+  el.addEventListener("mouseleave",()=>hover(null));
+});
+function hover(id){
+  allModEls().forEach(e=>e.classList.toggle("hover",e.dataset.mod===id));
+  const hb=$("hoverBox");
+  if(id&&id!==selected){setBox(hb,MOD[id].box,4);hb.setAttribute("opacity","1");}else hb.setAttribute("opacity","0");
+}
+const chipsEl=$("chips");
+MODS.forEach(m=>{
+  const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.mod=m.id;
+  b.innerHTML=`<span class="n">${m.n}</span><span class="nm">${m.name}</span><span class="st"><i></i><span></span></span>`;
+  b.addEventListener("click",()=>select(m.id));chipsEl.appendChild(b);
+});
+function select(id){
+  selected=id;const m=MOD[id];
+  allModEls().forEach(e=>e.classList.toggle("sel",e.dataset.mod===id));
+  setBox($("selBox"),m.box,4);hover(null);
+  $("pNum").textContent=`ETAPA ${m.n} / 05`;$("pName").textContent=m.name;$("pDesc").textContent=m.desc;
+  $("pPoints").innerHTML=m.pts.map(p=>`<li>${p}</li>`).join("");
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-current",c.dataset.mod===id?"true":"false"));
+  syncChecks();updateLive();
+}
+function syncChecks(){
+  const p=progress[selected];$("chkAdv").checked=p.adv;$("chkDone").checked=p.done;
+  const s=stOf(selected),el=$("pStatus");el.textContent=stTxt[s];el.className="st-"+s;
+}
+$("chkAdv").addEventListener("change",e=>{const p=progress[selected];p.adv=e.target.checked;if(!p.adv)p.done=false;save();refreshProgress();});
+$("chkDone").addEventListener("change",e=>{const p=progress[selected];p.done=e.target.checked;if(p.done)p.adv=true;save();refreshProgress();});
+$("resetBtn").addEventListener("click",()=>{MODS.forEach(m=>progress[m.id]={adv:false,done:false});save();refreshProgress();});
+function refreshProgress(){
+  syncChecks();
+  let done=0;const order=["hopper","conveyor","scale","capper","shrink"];
+  order.forEach((id,i)=>{const s=stOf(id);if(s==="done")done++;
+    dots[id].setAttribute("class","dot-"+s);
+    $("bar").children[i].className=s==="none"?"":s;});
+  document.querySelectorAll(".chip").forEach(c=>{const s=stOf(c.dataset.mod);const st=c.querySelector(".st");st.className="st "+(s==="none"?"":s);st.querySelector("span").textContent=stTxt[s];});
+  $("progTxt").textContent=`${done} de 5 completadas`;
+}
+function updateLive(){
+  const on=activeMod===selected,el=$("pLive");el.classList.toggle("on",on);
+  el.querySelector("span").textContent=on?"Operando ahora":"En espera";
+}
+
+/* ---------- Construcción de piezas animadas ---------- */
+// Rodillos
+const rollersG=$("rollers");const rollerSpokes=[];
+[41,959,180,390,610,830].forEach((x,i)=>{
+  const big=i<2;const r=big?10:4;
+  mk("circle",{cx:x,cy:341,r:r,class:big?"s-steel":"s-steel-d"},rollersG);
+  if(big){const s=mk("g",{},rollersG);mk("line",{x1:x-7,y1:341,x2:x+7,y2:341,stroke:"var(--steel-d)","stroke-width":2},s);mk("line",{x1:x,y1:334,x2:x,y2:348,stroke:"var(--steel-d)","stroke-width":2},s);rollerSpokes.push([s,x]);}
+});
+// Estrías de tapa y cabezal
+function addRidges(g,n,h,y){for(let i=0;i<n;i++)mk("rect",{x:-30+i*7,y:y,width:2.2,height:h,fill:"var(--lid-d)",opacity:".7"},g);}
+document.querySelectorAll(".ridges").forEach(g=>addRidges(g,10,12,-12));
+document.querySelectorAll(".ridges-chuck").forEach(g=>{for(let i=0;i<10;i++)mk("rect",{x:-34+i*8,y:2,width:3,height:15,fill:"var(--steel)",opacity:".8"},g);});
+// Partículas
+const N=22;const parts=[];const rnd=(i,s)=>{const x=Math.sin(i*127.1+s*311.7)*43758.5453;return x-Math.floor(x);};
+for(let i=0;i<N;i++){parts.push(mk("ellipse",{rx:2.6,ry:1.8,class:"s-bean",transform:"translate(-50,-50)"},$("particles")));}
+const inflow=[];for(let i=0;i<10;i++)inflow.push(mk("ellipse",{rx:2.4,ry:1.6,class:"s-bean",opacity:0},$("inflow")));
+// Ondas de calor
+for(let i=0;i<3;i++)mk("path",{d:""},$("waves"));
+const wavePaths=[...$("waves").children];
+// Arrugas de la manga
+for(let i=0;i<4;i++)mk("path",{d:""},$("wrinkles"));
+const wrinkleEls=[...$("wrinkles").children];
+
+/* ---------- Secuencia ---------- */
+const X0=-50,XH=170,XS=390,XC=615,XT=870,XE=1070;
+const SEQ=[
+ {s:0,e:1.2,mv:[X0,XH],mod:"conveyor",lab:"Ingreso del envase"},
+ {s:1.2,e:4.0,x:XH,mod:"hopper",lab:"Llenando"},
+ {s:4.0,e:5.4,mv:[XH,XS],mod:"conveyor",lab:"Hacia pesaje"},
+ {s:5.4,e:7.4,x:XS,mod:"scale",lab:"Pesando"},
+ {s:7.4,e:8.8,mv:[XS,XC],mod:"conveyor",lab:"Hacia tapado"},
+ {s:8.8,e:9.8,x:XC,mod:"capper",lab:"Posicionando tapa"},
+ {s:9.8,e:12.0,x:XC,mod:"capper",lab:"Presión y enroscado"},
+ {s:12.0,e:13.4,mv:[XC,XT],mod:"conveyor",lab:"Hacia sellado"},
+ {s:13.4,e:14.4,x:XT,mod:"shrink",lab:"Colocando manga"},
+ {s:14.4,e:16.0,x:XT,mod:"shrink",lab:"Termocontrayendo"},
+ {s:16.0,e:17.4,mv:[XT,XE],mod:"conveyor",lab:"Salida"}
+];
+const T=17.4;
+$("hudRate").textContent=(60/T).toFixed(1)+" env/min";
+const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+const seg=(t,a,b)=>Math.min(1,Math.max(0,(t-a)/(b-a)));
+const lerp=(a,b,p)=>a+(b-a)*p;
+
+function sleevePath(k,dy){
+  const ys=[-102,-86,-83,-76,-7,-1];
+  const loose=[74,74,74,74,74,74], tight=[50,50,44,59,59,50];
+  const L=[],R=[];
+  ys.forEach((y,i)=>{const w=lerp(loose[i],tight[i],k)/2;const yy=y+dy+(i===5?lerp(0,-1,k):0);L.push([-w,yy]);R.push([w,yy]);});
+  let d="M"+L.map(p=>p.join(" ")).join(" L")+" L"+R.reverse().map(p=>p.join(" ")).join(" L")+" Z";
+  return d;
+}
+
+let lastPhaseLab="";
+function render(sim){
+  const cyc=Math.floor(sim/T), t=sim-cyc*T;
+  const cur=SEQ.find(s=>t>=s.s&&t<s.e)||SEQ[SEQ.length-1];
+  let x=cur.mv?lerp(cur.mv[0],cur.mv[1],ease(seg(t,cur.s,cur.e))):cur.x;
+
+  // Faja y rodillos
+  const beltPos=cyc*(XE-X0)+(x-X0);
+  $("beltTop").setAttribute("stroke-dashoffset",(-beltPos).toFixed(1));
+  $("beltBot").setAttribute("stroke-dashoffset",(beltPos).toFixed(1));
+  const ang=(beltPos/10)*180/Math.PI;
+  rollerSpokes.forEach(([g,cx])=>g.setAttribute("transform",`rotate(${ang.toFixed(1)} ${cx} 341)`));
+
+  // Tolva
+  const gate=Math.min(seg(t,1.3,1.5),1-seg(t,3.7,3.9));
+  $("gate").setAttribute("x",(150+34*gate).toFixed(1));
+  const level=70+12*seg(t,1.5,3.7)-12*seg(t,4.2,8.2);
+  $("hopperBeans").setAttribute("y",level.toFixed(1));
+  inflow.forEach((p,i)=>{
+    const on=t>4.2&&t<8.2;const ph=((t*1.6)+i/inflow.length)%1;
+    const px=226-ph*14+(rnd(i,1)-.5)*4, py=42+ph*(level-42);
+    p.setAttribute("opacity",on?1:0);p.setAttribute("transform",`translate(${px.toFixed(1)},${py.toFixed(1)}) rotate(${(i*47+t*200)%360})`);
+  });
+
+  // Llenado
+  const fill=ease(seg(t,1.5,3.7));
+  const ch=4+72*fill;
+  $("jarCoffee").setAttribute("y",(-ch).toFixed(1));$("jarCoffee").setAttribute("height",ch.toFixed(1));
+  const surf=330-ch;
+  parts.forEach((p,i)=>{
+    const ph=((t*2.4)+i/N)%1; const on=gate>.6&&t<3.75&&t>1.4;
+    const y=190+ph*(surf-190);
+    const spread=lerp(12,14,ph);
+    const px=XH+(rnd(i,2)-.5)*2*spread*(.4+.6*ph);
+    if(!on||y>surf-1){p.setAttribute("transform","translate(-50,-50)");return;}
+    p.setAttribute("transform",`translate(${px.toFixed(1)},${y.toFixed(1)}) rotate(${(i*61+t*300)%360})`);
+  });
+
+  // Pesaje
+  const dip=2*Math.min(seg(t,5.4,5.7),1-seg(t,7.1,7.4));
+  $("scalePlate").setAttribute("y",(354+dip).toFixed(1));
+  let txt="0.0 g",led="var(--none)";
+  if(t>=5.5&&t<7.4){
+    const p=ease(seg(t,5.6,6.6));let v=250.3*p;
+    if(p<1)v+=Math.sin(t*40)*3*(1-p);
+    txt=Math.max(0,v).toFixed(1)+" g";
+    if(t>6.7){led="var(--ok)";}else led="var(--adv)";
+  }
+  $("scaleTxt").textContent=txt;$("scaleLed").setAttribute("fill",led);
+
+  // Tapado
+  let lidX=745,lidY=242,lidVis=true;
+  if(t>=8.8&&t<9.8){lidX=lerp(745,XC,ease(seg(t,8.8,9.8)));}
+  else if(t>=9.8&&t<12){lidVis=false;}
+  else if(t>=12){lidY=lerp(229,242,ease(seg(t,12,12.5)));}
+  const lf=$("lidFree");lf.style.display=lidVis?"":"none";lf.setAttribute("transform",`translate(${lidX.toFixed(1)},${lidY.toFixed(1)})`);
+  let pushX=768;
+  if(t>=8.8&&t<9.8)pushX=lidX+23;else if(t>=9.8&&t<10.8)pushX=lerp(XC+23,768,ease(seg(t,9.8,10.8)));
+  $("pusher").setAttribute("x",pushX.toFixed(1));$("pusherRod").setAttribute("x",pushX.toFixed(1));$("pusherRod").setAttribute("width",(776-pushX).toFixed(1));
+  let chuckY=165;
+  if(t>=9.8&&t<10.4)chuckY=lerp(165,210,ease(seg(t,9.8,10.4)));
+  else if(t>=10.4&&t<11.4)chuckY=210;
+  else if(t>=11.4&&t<12)chuckY=lerp(210,165,ease(seg(t,11.4,12)));
+  $("chuck").setAttribute("transform",`translate(615,${chuckY.toFixed(1)})`);
+  $("capRod").setAttribute("height",(chuckY-144).toFixed(1));
+  const press=t>=9.8?(t<11.4?Math.max(0,Math.min(2,chuckY-208)):2):0;
+  const rot=ease(seg(t,10.4,11.4))*3;
+  const off=((rot*46)%7+7)%7, offC=((rot*46)%8+8)%8;
+  document.querySelectorAll("#jarLid .ridges").forEach(g=>g.setAttribute("transform",`translate(${off.toFixed(2)},0)`));
+  document.querySelectorAll(".ridges-chuck").forEach(g=>g.setAttribute("transform",`translate(${offC.toFixed(2)},0)`));
+  const jl=$("jarLid");jl.style.display=t>=9.8?"":"none";jl.setAttribute("transform",`translate(0,${(-88+press).toFixed(1)})`);
+
+  // Envase
+  $("jar").setAttribute("transform",`translate(${x.toFixed(1)},${(330+dip).toFixed(1)})`);
+
+  // Manga termocontraíble
+  const sg=$("sleeveG");
+  if(t>=13.4){
+    sg.style.display="";
+    const dy=lerp(-98,0,ease(seg(t,13.4,14.2)));
+    const k=ease(seg(t,14.6,15.8));
+    $("sleeve").setAttribute("d",sleevePath(k,dy));
+    $("sleeve").style.fillOpacity=(0.55+0.35*k).toFixed(2);
+    wrinkleEls.forEach((w,i)=>{const wx=-28+i*18+4;const amp=(1-k)*3;
+      w.setAttribute("d",`M${wx} ${-96+dy} q${amp} 12 0 24 q${-amp} 12 0 24 q${amp} 12 0 24 q${-amp} 10 0 18`);w.setAttribute("opacity",((1-k)*.6).toFixed(2));});
+    const sh=$("sleeveShine");sh.setAttribute("x1",22);sh.setAttribute("x2",22);sh.setAttribute("y1",-70);sh.setAttribute("y2",-14);sh.setAttribute("opacity",(k*.6).toFixed(2));
+  } else sg.style.display="none";
+  const ws=$("waitSleeve");
+  if(t<13.4){ws.style.display="";ws.setAttribute("d",`M833 130 L907 130 L907 228 L833 228 Z`);}
+  else if(t>=16){const h=98*seg(t,16,17.2);ws.style.display=h>1?"":"none";ws.setAttribute("d",`M833 130 L907 130 L907 ${130+h} L833 ${130+h} Z`);}
+  else ws.style.display="none";
+  const roll=(cyc+seg(t,16,17.2)+0.4*seg(t,13.4,14.2))*220;
+  $("rollSpokes").setAttribute("transform",`rotate(${roll.toFixed(1)} 870 62)`);
+  const heat=Math.min(seg(t,14.4,14.8),1-seg(t,15.8,16.2));
+  document.querySelectorAll(".heater").forEach(h=>h.setAttribute("opacity",(heat*.95).toFixed(2)));
+  $("heatGlowRect").setAttribute("opacity",heat.toFixed(2));
+  $("tunnelLed").setAttribute("fill",heat>.1?"var(--heat)":"var(--none)");
+  $("waves").setAttribute("opacity",(heat*.8).toFixed(2));
+  wavePaths.forEach((w,i)=>{const wx=[836,904,870][i];const ph=((sim*0.9+i/3)%1);const y0=318-ph*90;
+    const xx=i===2?(wx+(ph>.5?0:0)):wx;
+    w.setAttribute("d",`M${xx} ${y0} q5 -7 0 -14 q-5 -7 0 -14 q5 -7 0 -14`);w.setAttribute("stroke-opacity",(Math.sin(ph*Math.PI)).toFixed(2));
+    w.style.display=(i===2)?"none":"";});
+
+  // Estado activo
+  const prog=Math.round(seg(t,cur.s,cur.e)*100);
+  $("hudPhase").textContent=`${cur.lab} · ${String(prog).padStart(3," ")}%`;
+  $("hudCount").textContent=String(cyc).padStart(4,"0");
+  if(activeMod!==cur.mod){
+    activeMod=cur.mod;
+    allModEls().forEach(e=>e.classList.toggle("active",e.dataset.mod===activeMod));
+    document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("running",c.dataset.mod===activeMod));
+    updateLive();
+  }
+}
+
+/* ---------- Bucle ---------- */
+const reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let sim=2.6, playing=!reduce, speed=1, last=null;
+const playBtn=$("playBtn");
+function setPlay(p){playing=p;playBtn.setAttribute("aria-pressed",String(p));playBtn.textContent=p?"❚❚ Pausar":"▶ Reproducir";last=null;}
+playBtn.addEventListener("click",()=>setPlay(!playing));
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  speed=parseFloat(b.dataset.speed);document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+}));
+function frame(ts){
+  if(playing){if(last!==null){sim+=Math.min(.1,(ts-last)/1000)*speed;}last=ts;}
+  render(sim);requestAnimationFrame(frame);
+}
+setPlay(playing);
+refreshProgress();select("hopper");render(sim);
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
